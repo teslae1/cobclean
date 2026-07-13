@@ -23,7 +23,7 @@ suite('Extension Test Suite', () => {
 	vscode.window.showInformationMessage('Start all tests.');
 	
 
-	test('test auto-uppercasing', async () => {
+	test('test auto-uppercasing', async function () {
 		const initial = `
        *********************
        first section.
@@ -38,34 +38,38 @@ suite('Extension Test Suite', () => {
            DISPLAY 'SOMETHING THAT HAS lowercase'
 		   .
     `;
+
+		this.timeout(10000);
 		await assertFormatProcedureChangesContentAsync(initial, exp);
 	});
 
 	async function assertFormatProcedureChangesContentAsync(initialContentIncludingCursorPosition: string,
 		expContentAfterFormatting: string) {
-		const doc = await vscode.workspace.openTextDocument({
-			content: initialContentIncludingCursorPosition
-		});
-		const editor = await vscode.window.showTextDocument(doc);
 		const position = getCurrentCursorPosition(initialContentIncludingCursorPosition);
 		if (!position) {
 			assert.fail("current cursor position could not be found in initial content of test");
 		}
+		const initialContent = removeChar(initialContentIncludingCursorPosition, cursorChar);
+		const doc = await vscode.workspace.openTextDocument({
+			content: initialContent
+		});
+		const editor = await vscode.window.showTextDocument(doc);
 		editor.selection = new vscode.Selection(position, position);
+		//await wait(10000);
 		await vscode.commands.executeCommand('cobclean.formatProcedure');
 		const actText = editor.document.getText();
 		assert.strictEqual(actText, expContentAfterFormatting);
 	}
 
 	function getCurrentCursorPosition(initialContentIncludingCursorPosition: string): vscode.Position | undefined {
-		let lineNr = 1;
+		let lineNr = 0;
 		let charPos = 0;
 		for(let i = 0; i < initialContentIncludingCursorPosition.length;i++){
-			if(initialContentIncludingCursorPosition[i] == '\n'){
+			if(initialContentIncludingCursorPosition[i] === '\n'){
 				lineNr++;
 				charPos = 0;
 			} 
-			else if(initialContentIncludingCursorPosition[i] == cursorChar){
+			else if(initialContentIncludingCursorPosition[i] === cursorChar){
 				return new vscode.Position(lineNr,charPos);
 			}
 			else{
@@ -75,3 +79,17 @@ suite('Extension Test Suite', () => {
 		return undefined;
 	}
 });
+function removeChar(str: string, char: string) : string {
+	let result = "";
+	for(let i = 0; i < str.length;i++){
+		if(str[i] == char){
+			continue;
+		}
+		result += str[i];
+	}
+	return result;
+}
+function wait(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+

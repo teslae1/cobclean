@@ -1,6 +1,7 @@
 {
 	"compilerOptions": {
 		"module": "Node16",
+        "types": ["node", "vscode", "mocha"],
 		"target": "ES2022",
 		"outDir": "out",
 		"lib": [
