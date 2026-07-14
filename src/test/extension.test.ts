@@ -22,11 +22,41 @@ const cursorChar = '|';
 suite('Extension Test Suite', () => {
 	vscode.window.showInformationMessage('Start all tests.');
 
+	test('auto align header backward', async function () {
+		const initial = `
+             MYHEADER SECTION.
+           |COMPUTE X = A * B * C
+           DISPLAY X.
+		`;
+		const exp = `
+       MYHEADER SECTION.
+           COMPUTE X = A * B * C
+           DISPLAY X.
+		`;
+		await assertFormatProcedureChangesContentAsync(initial, exp);
+
+	});
+
+	test('auto align header forward', async function () {
+		const initial = `
+   MYHEADER SECTION.
+           |COMPUTE X = A * B * C
+           DISPLAY X.
+		`;
+		const exp = `
+       MYHEADER SECTION.
+           COMPUTE X = A * B * C
+           DISPLAY X.
+		`;
+		await assertFormatProcedureChangesContentAsync(initial, exp);
+
+	});
+
 	test('auto align for comments', async function () {
 		const initial = `
        SECTION.
 * MY FIRST COMMENT
-	          * MY SECOND COMMENT
+               * MY SECOND COMMENT
       * MY THIRD COMMENT
            |COMPUTE X = A * B * C
            DISPLAY X.

@@ -11,9 +11,8 @@ npm test
   - [X] support not uppercasing string constants
 - [x] test to ensure the format only is paragraph wise
 - [-] support auto align
-  - [ ] add test
-  - [ ] for comments - should start with * at col 8
-  - [ ] for the header (first line) - should start at 9
+  - [X] for comments - should start with * at col 8
+  - [-] for the header (first line) - should start at 9
   - [ ] for contents lets go with col 11 align for now
   - [ ] for anything that is "move" make sure to align to on bottom
   - [ ] for anything that is indented like the movie - it should be done so automatically
@@ -30,3 +29,4 @@ npm test
 - [ ] reach first draft publish
 - [ ] future features:
   - [ ] full formatter that can be invoked on the thing
+  - [ ] convert current selection to comments

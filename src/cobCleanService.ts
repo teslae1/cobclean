@@ -50,7 +50,9 @@ async function formatProcedureFromHeaderUntilNextHeaderOrEndAsync(
     procedureHeaderStartLineIndex: number,
     sourceLines: string[], editor: vscode.TextEditor): Promise<void> {
 
-    let newSource = toUpperCaseExcludingStringLiterals(sourceLines[procedureHeaderStartLineIndex]) + "\n";
+    let newSource = toUpperCaseExcludingStringLiterals(sourceLines[procedureHeaderStartLineIndex]);
+    newSource = indentHeader(newSource);
+    newSource += "\n";
     let procedureEndLineIndex = sourceLines.length;
     for (let lineIndex = procedureHeaderStartLineIndex + 1; lineIndex < sourceLines.length; lineIndex++) {
         if (isProcedureHeader(sourceLines[lineIndex])) {
@@ -108,19 +110,37 @@ function toUpperCaseExcludingStringLiterals(sourceLine: string): string {
 
 function indent(sourceLine: string): string {
     if(isComment(sourceLine)){
-        let indexOfStartComment = sourceLine.indexOf(commentChar);
-        if(indexOfStartComment == 6){
-            return sourceLine;
+        return indentComment(sourceLine);
+    }
+    return sourceLine;
+}
+
+function indentComment(sourceLine: string): string {
+    return moveStartOfNonWhitespaceToIndex(sourceLine, 6);
+}
+
+function indentHeader(sourceLine: string) : string{
+    return moveStartOfNonWhitespaceToIndex(sourceLine, 7);
+}
+
+function moveStartOfNonWhitespaceToIndex(sourceLine: string, index: number): string {
+    let firstIndexOfNonWhitespace = 0;
+    for(let i = 0; i < sourceLine.length;i++){
+        if(sourceLine[i] != " "){
+            firstIndexOfNonWhitespace = i;
+            break;
         }
-        while(indexOfStartComment < 6){
-            sourceLine = " " + sourceLine;
-            indexOfStartComment++;
-        }
-        while(indexOfStartComment > 6){
-            sourceLine = sourceLine.substring(1,sourceLine.length);
-            indexOfStartComment--;
-        }
+    }
+    if (firstIndexOfNonWhitespace == index) {
         return sourceLine;
+    }
+    while (firstIndexOfNonWhitespace < index) {
+        sourceLine = " " + sourceLine;
+        firstIndexOfNonWhitespace++;
+    }
+    while (firstIndexOfNonWhitespace > index) {
+        sourceLine = sourceLine.substring(1, sourceLine.length);
+        firstIndexOfNonWhitespace--;
     }
     return sourceLine;
 }
