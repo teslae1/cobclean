@@ -21,20 +21,73 @@ const cursorChar = '|';
 
 suite('Extension Test Suite', () => {
 	vscode.window.showInformationMessage('Start all tests.');
+
+	test('auto align for comments', async function () {
+		const initial = `
+       SECTION.
+* MY FIRST COMMENT
+	          * MY SECOND COMMENT
+      * MY THIRD COMMENT
+           |COMPUTE X = A * B * C
+           DISPLAY X.
+		`;
+		const exp = `
+       SECTION.
+      * MY FIRST COMMENT
+      * MY SECOND COMMENT
+      * MY THIRD COMMENT
+           COMPUTE X = A * B * C
+           DISPLAY X.
+		`;
+
+		await assertFormatProcedureChangesContentAsync(initial, exp);
+
+	});
+
+	test('scoped to single procedure', async function () {
+		const initial = `
+       first section.
+           compute x = a * b * c
+           display x.
+
+       second.
+           |compute pi = 3.14
+           display pi.
+
+       third.
+           compute x = a * b * c
+           display x.
+    `;
+		const exp = `
+       first section.
+           compute x = a * b * c
+           display x.
+
+       SECOND.
+           COMPUTE PI = 3.14
+           DISPLAY PI.
+
+       third.
+           compute x = a * b * c
+           display x.
+    `;
+
+	await assertFormatProcedureChangesContentAsync(initial, exp);
+	});
 	
 
-	test('test auto-uppercasing', async function () {
+	test('auto-uppercasing', async function () {
 		const initial = `
-       *********************
+      *********************
        first section.
-       *********************
+      *********************
            DISPLAy |'SOMETHING THAT HAS lowercase'
 		   .
     `;
 		const exp = `
-       *********************
+      *********************
        FIRST SECTION.
-       *********************
+      *********************
            DISPLAY 'SOMETHING THAT HAS lowercase'
 		   .
     `;

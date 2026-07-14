@@ -9,7 +9,8 @@ npm test
 - [x] setup git
 - [X] support auto uppercasing
   - [X] support not uppercasing string constants
-- [ ] support auto align
+- [x] test to ensure the format only is paragraph wise
+- [-] support auto align
   - [ ] add test
   - [ ] for comments - should start with * at col 8
   - [ ] for the header (first line) - should start at 9
@@ -23,6 +24,7 @@ npm test
 - [ ] support a good way of detecting end when not another procedure like a copybook
 - [ ] figure out why the test output swaps actual and expected and outputs two things
 - [ ] consider format all procedures
+- [ ] once adding more features consider renaming test suite to be only procedure scoped
 - [ ] add test to assert that scope is only current procedure
 - [ ] formatter also working on testcases
 - [ ] reach first draft publish

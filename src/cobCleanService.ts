@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 
 const stringLiteralStartChar = "'";
+const commentChar = "*";
 
 export class CobCleanService {
 	async formatProcedureAsync() : Promise<void> {
@@ -42,10 +43,12 @@ function isProcedureHeader(sourceLine: string) : Boolean {
     return false;
 }
 function isComment(sourceLine: string) {
-    return sourceLine.trimStart().startsWith("*");
+    return sourceLine.trimStart().startsWith(commentChar);
 }
 
-async function formatProcedureFromHeaderUntilNextHeaderOrEndAsync(procedureHeaderStartLineIndex: number, sourceLines: string[], editor: vscode.TextEditor): Promise<void> {
+async function formatProcedureFromHeaderUntilNextHeaderOrEndAsync(
+    procedureHeaderStartLineIndex: number,
+    sourceLines: string[], editor: vscode.TextEditor): Promise<void> {
 
     let newSource = toUpperCaseExcludingStringLiterals(sourceLines[procedureHeaderStartLineIndex]) + "\n";
     let procedureEndLineIndex = sourceLines.length;
@@ -56,6 +59,7 @@ async function formatProcedureFromHeaderUntilNextHeaderOrEndAsync(procedureHeade
         }
         let newSourceLine = sourceLines[lineIndex];
         newSourceLine = toUpperCaseExcludingStringLiterals(newSourceLine);
+        newSourceLine = indent(newSourceLine);
         newSource += newSourceLine;
         if(lineIndex < sourceLines.length - 1){
             newSource += "\n";
@@ -100,5 +104,24 @@ function toUpperCaseExcludingStringLiterals(sourceLine: string): string {
         }
     }
     return uppercasedSourceLine;
+}
+
+function indent(sourceLine: string): string {
+    if(isComment(sourceLine)){
+        let indexOfStartComment = sourceLine.indexOf(commentChar);
+        if(indexOfStartComment == 6){
+            return sourceLine;
+        }
+        while(indexOfStartComment < 6){
+            sourceLine = " " + sourceLine;
+            indexOfStartComment++;
+        }
+        while(indexOfStartComment > 6){
+            sourceLine = sourceLine.substring(1,sourceLine.length);
+            indexOfStartComment--;
+        }
+        return sourceLine;
+    }
+    return sourceLine;
 }
 
