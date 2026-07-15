@@ -12,10 +12,84 @@ npm test
 - [x] test to ensure the format only is paragraph wise
 - [-] support auto align
   - [X] for comments - should start with * at col 8
-  - [-] for the header (first line) - should start at 9
-  - [ ] for contents lets go with col 11 align for now
-  - [ ] for anything that is "move" make sure to align to on bottom
+  - [X] for the header (first line) - should start at 9
+  - [-] for contents lets go with col 11 align for now
+  - [ ] for move inline to - seperate to two lines
+  
+		const init = `
+       MYHEADER |SECTION.
+           MOVE A IN AGROUP TO A IN BGROUP
+           .
+		`;
+		const exp = `
+       MYHEADER SECTION.
+           MOVE A IN AGROUP 
+             TO A IN BGROUP
+           .
+		`;
   - [ ] for anything that is indented like the movie - it should be done so automatically
+		const init = `
+       MYHEADER |SECTION.
+           MOVE A IN AGROUP 
+             TO A IN BGROUP
+           MOVE AA IN AGROUP 
+             TO AA IN BGROUP
+           MOVE AAA IN AGROUP 
+             TO AAA IN BGROUP
+           .
+		`;
+		const exp = `
+       MYHEADER SECTION.
+           MOVE A   IN AGROUP 
+             TO A   IN BGROUP
+           MOVE AA  IN AGROUP 
+             TO AA  IN BGROUP
+           MOVE AAA IN AGROUP 
+             TO AAA IN BGROUP
+           .
+		`;
+  - [ ] for anything that is beyond border we need to make it pretty
+  - [ ] for anything move without general structure at top - follow standard structure
+		const init = `
+       MYHEADER |SECTION.
+           MOVE A IN AGROUP TO A IN BGROUP
+           MOVE AA IN AGROUP TO AA IN BGROUP
+           MOVE AAA IN AGROUP TO AAA IN BGROUP
+           .
+		`;
+		const exp = `
+       MYHEADER SECTION.
+           MOVE A   IN AGROUP 
+             TO A   IN BGROUP
+           MOVE AA  IN AGROUP 
+             TO AA  IN BGROUP
+           MOVE AAA IN AGROUP 
+             TO AAA IN BGROUP
+           .
+		`;
+  - [ ] for last move need formatting reformats everything
+		const init = `
+       MYHEADER |SECTION.
+           MOVE A  IN AGROUP 
+             TO A  IN BGROUP
+           MOVE AA IN AGROUP 
+             TO AA IN BGROUP
+           MOVE AAA IN AGROUP TO AAA IN BGROUP
+           .
+		`;
+		const exp = `
+       MYHEADER SECTION.
+           MOVE A   IN AGROUP 
+             TO A   IN BGROUP
+           MOVE AA  IN AGROUP 
+             TO AA  IN BGROUP
+           MOVE AAA IN AGROUP 
+             TO AAA IN BGROUP
+           .
+		`;
+  - [ ] for two seperate move sections keep indentation group wise
+  - [ ] test that if move formatting on more indent crosses the right hand border 
+        - if so we want to break the line somewhere for all in that move group
   - [ ] support same kind of formatting from video
 - [ ] formatter able to align everything to do with paragraph 
 - [ ] support unit test formatter

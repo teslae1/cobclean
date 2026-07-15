@@ -22,17 +22,31 @@ const cursorChar = '|';
 suite('Extension Test Suite', () => {
 	vscode.window.showInformationMessage('Start all tests.');
 
+	test('auto align method contents', async function () {
+		const initial = `
+       MYHEADER SECTION.
+      COMPUTE X = A * B * |C
+               DISPLAY X.
+`;
+		const exp = `
+       MYHEADER SECTION.
+           COMPUTE X = A * B * C
+           DISPLAY X.
+`;
+		await assertFormatProcedureChangesContentAsync(initial, exp);
+	});
+
 	test('auto align header backward', async function () {
 		const initial = `
              MYHEADER SECTION.
            |COMPUTE X = A * B * C
            DISPLAY X.
-		`;
+`;
 		const exp = `
        MYHEADER SECTION.
            COMPUTE X = A * B * C
            DISPLAY X.
-		`;
+`;
 		await assertFormatProcedureChangesContentAsync(initial, exp);
 
 	});
@@ -42,12 +56,12 @@ suite('Extension Test Suite', () => {
    MYHEADER SECTION.
            |COMPUTE X = A * B * C
            DISPLAY X.
-		`;
+`;
 		const exp = `
        MYHEADER SECTION.
            COMPUTE X = A * B * C
            DISPLAY X.
-		`;
+`;
 		await assertFormatProcedureChangesContentAsync(initial, exp);
 
 	});
@@ -60,7 +74,7 @@ suite('Extension Test Suite', () => {
       * MY THIRD COMMENT
            |COMPUTE X = A * B * C
            DISPLAY X.
-		`;
+`;
 		const exp = `
        SECTION.
       * MY FIRST COMMENT
@@ -68,7 +82,7 @@ suite('Extension Test Suite', () => {
       * MY THIRD COMMENT
            COMPUTE X = A * B * C
            DISPLAY X.
-		`;
+`;
 
 		await assertFormatProcedureChangesContentAsync(initial, exp);
 
@@ -112,15 +126,15 @@ suite('Extension Test Suite', () => {
        first section.
       *********************
            DISPLAy |'SOMETHING THAT HAS lowercase'
-		   .
-    `;
+           .
+`;
 		const exp = `
       *********************
        FIRST SECTION.
       *********************
            DISPLAY 'SOMETHING THAT HAS lowercase'
-		   .
-    `;
+           .
+`;
 
 		this.timeout(10000);
 		await assertFormatProcedureChangesContentAsync(initial, exp);

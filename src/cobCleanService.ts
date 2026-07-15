@@ -32,7 +32,7 @@ export class CobCleanService {
 function isProcedureHeader(sourceLine: string) : Boolean {
     if (!sourceLine) { return false; }
     if (isComment(sourceLine)) { return false; }
-    if(sourceLine.trim().length == 1) { return false; } // handles the single line "."
+    if(sourceLine.trim().length === 1) { return false; } // handles the single line "."
     const splitBySpaces = sourceLine.trim().split(" ");
     if(splitBySpaces.length === 1){
         return splitBySpaces[0].endsWith(".");
@@ -61,12 +61,11 @@ async function formatProcedureFromHeaderUntilNextHeaderOrEndAsync(
         }
         let newSourceLine = sourceLines[lineIndex];
         newSourceLine = toUpperCaseExcludingStringLiterals(newSourceLine);
-        newSourceLine = indent(newSourceLine);
+        newSourceLine = indentProcedureSourceLine(newSourceLine);
         newSource += newSourceLine;
         if(lineIndex < sourceLines.length - 1){
             newSource += "\n";
         }
-
     }
     const startPosition = new vscode.Position(procedureHeaderStartLineIndex, 0);
     const endPosition = new vscode.Position(procedureEndLineIndex, 0);
@@ -108,11 +107,11 @@ function toUpperCaseExcludingStringLiterals(sourceLine: string): string {
     return uppercasedSourceLine;
 }
 
-function indent(sourceLine: string): string {
+function indentProcedureSourceLine(sourceLine: string): string {
     if(isComment(sourceLine)){
         return indentComment(sourceLine);
     }
-    return sourceLine;
+    return moveStartOfNonWhitespaceToIndex(sourceLine, 11);
 }
 
 function indentComment(sourceLine: string): string {
@@ -124,14 +123,17 @@ function indentHeader(sourceLine: string) : string{
 }
 
 function moveStartOfNonWhitespaceToIndex(sourceLine: string, index: number): string {
-    let firstIndexOfNonWhitespace = 0;
+    let firstIndexOfNonWhitespace = -1;
     for(let i = 0; i < sourceLine.length;i++){
         if(sourceLine[i] != " "){
             firstIndexOfNonWhitespace = i;
             break;
         }
     }
-    if (firstIndexOfNonWhitespace == index) {
+    if(firstIndexOfNonWhitespace === -1){
+        return sourceLine;
+    }
+    if (firstIndexOfNonWhitespace === index) {
         return sourceLine;
     }
     while (firstIndexOfNonWhitespace < index) {
