@@ -6,6 +6,30 @@ const cursorChar = '|';
 suite('Extension Test Suite', () => {
 	vscode.window.showInformationMessage('Start all tests.');
 
+	test('move align indents', async function () {
+		const initial = `
+       MYHEADER |SECTION.
+           MOVE A IN AGROUP 
+             TO A IN BGROUP
+           MOVE AA IN AGROUP 
+             TO AA IN BGROUP
+           MOVE AAA IN AGROUP 
+             TO AAA IN BGROUP
+           .
+`;
+		const exp = `
+       MYHEADER SECTION.
+           MOVE A   IN AGROUP 
+             TO A   IN BGROUP
+           MOVE AA  IN AGROUP 
+             TO AA  IN BGROUP
+           MOVE AAA IN AGROUP 
+             TO AAA IN BGROUP
+           .
+`;
+		await assertFormatProcedureChangesContentAsync(initial, exp);
+	});
+
 	test('move statements is seperated into two lines', async function () {
 		const initial = `
        MYHEADER |SECTION.

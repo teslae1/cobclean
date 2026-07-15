@@ -14,9 +14,8 @@ npm test
   - [X] for comments - should start with * at col 8
   - [X] for the header (first line) - should start at 9
   - [X] for contents lets go with col 11 align for now
-  - [-] for move inline to - seperate to two lines
-  
-  - [ ] for anything that is indented like the movie - it should be done so automatically
+  - [X] for move inline to - seperate to two lines
+  - [ ] move align indents
 		const init = `
        MYHEADER |SECTION.
            MOVE A IN AGROUP 

@@ -156,6 +156,13 @@ function formatMove(sourceLine: string): string {
         const split = sourceLine.split(TO_KEYWORD);
         sourceLine = split[0] + "\n             "+ TO_KEYWORD + split[1];
     }
+    // if matches current move context (in params)
+    // and is currently not following max align standard 
+    //   if current is bigger than max align 
+    //     set new max align and make parsing start over at first move again
+    //   if current is smaller than max align
+    //     edit it to follow max align and continue
+    //
     return sourceLine;
 }
 
