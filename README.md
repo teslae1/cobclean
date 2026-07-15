@@ -13,20 +13,9 @@ npm test
 - [-] support auto align
   - [X] for comments - should start with * at col 8
   - [X] for the header (first line) - should start at 9
-  - [-] for contents lets go with col 11 align for now
-  - [ ] for move inline to - seperate to two lines
+  - [X] for contents lets go with col 11 align for now
+  - [-] for move inline to - seperate to two lines
   
-		const init = `
-       MYHEADER |SECTION.
-           MOVE A IN AGROUP TO A IN BGROUP
-           .
-		`;
-		const exp = `
-       MYHEADER SECTION.
-           MOVE A IN AGROUP 
-             TO A IN BGROUP
-           .
-		`;
   - [ ] for anything that is indented like the movie - it should be done so automatically
 		const init = `
        MYHEADER |SECTION.

@@ -1,26 +1,25 @@
 import * as assert from 'assert';
-
-// You can import and use all API from the 'vscode' module
-// as well as import your extension to test it
 import * as vscode from 'vscode';
-// import * as myExtension from '../../extension';
-
-//		const initialContent = `
-//       *********************
-//       first section.
-//       *********************
-//           compute x = a * b * c
-//           display x.
-//
-//       second.
-//           compute pi = 3.14
-//           display pi.
-//    `;
 
 const cursorChar = '|';
 
 suite('Extension Test Suite', () => {
 	vscode.window.showInformationMessage('Start all tests.');
+
+	test('move statements is seperated into two lines', async function () {
+		const initial = `
+       MYHEADER |SECTION.
+           MOVE A IN AGROUP TO A IN BGROUP
+           .
+`;
+		const exp = `
+       MYHEADER SECTION.
+           MOVE A IN AGROUP 
+             TO A IN BGROUP
+           .
+`;
+		await assertFormatProcedureChangesContentAsync(initial, exp);
+	});
 
 	test('auto align method contents', async function () {
 		const initial = `

@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 
 const stringLiteralStartChar = "'";
 const commentChar = "*";
+const MOVE_KEYWORD = "MOVE";
+const TO_KEYWORD = "TO";
 
 export class CobCleanService {
 	async formatProcedureAsync() : Promise<void> {
@@ -59,10 +61,7 @@ async function formatProcedureFromHeaderUntilNextHeaderOrEndAsync(
             procedureEndLineIndex = lineIndex;
             break;
         }
-        let newSourceLine = sourceLines[lineIndex];
-        newSourceLine = toUpperCaseExcludingStringLiterals(newSourceLine);
-        newSourceLine = indentProcedureSourceLine(newSourceLine);
-        newSource += newSourceLine;
+        newSource += formatSourceLine(sourceLines[lineIndex]);
         if(lineIndex < sourceLines.length - 1){
             newSource += "\n";
         }
@@ -73,12 +72,6 @@ async function formatProcedureFromHeaderUntilNextHeaderOrEndAsync(
     await editor.edit(editBuilder => {
         editBuilder.replace(range, newSource);
     });
-
-
-    // when current line is either a single word postfixed by . 
-    //      or two words - one word that is without . postfix and another that is "section." (case insensitive)
-    //format forward from here until end of procedure
-    // end of procedure is again whenever above thing occurs
 }
 
 function toUpperCaseExcludingStringLiterals(sourceLine: string): string {
@@ -105,6 +98,15 @@ function toUpperCaseExcludingStringLiterals(sourceLine: string): string {
         }
     }
     return uppercasedSourceLine;
+}
+
+function formatSourceLine(initialSourceLine: string) {
+    let sourceLine = toUpperCaseExcludingStringLiterals(initialSourceLine);
+    sourceLine = indentProcedureSourceLine(sourceLine);
+    if(sourceLine.trim().startsWith(MOVE_KEYWORD)){
+        sourceLine = formatMove(sourceLine);
+    }
+    return sourceLine;
 }
 
 function indentProcedureSourceLine(sourceLine: string): string {
@@ -143,6 +145,16 @@ function moveStartOfNonWhitespaceToIndex(sourceLine: string, index: number): str
     while (firstIndexOfNonWhitespace > index) {
         sourceLine = sourceLine.substring(1, sourceLine.length);
         firstIndexOfNonWhitespace--;
+    }
+    return sourceLine;
+}
+
+
+function formatMove(sourceLine: string): string {
+    const moveHasInlineTo = sourceLine.includes(TO_KEYWORD);
+    if(moveHasInlineTo){
+        const split = sourceLine.split(TO_KEYWORD);
+        sourceLine = split[0] + "\n             "+ TO_KEYWORD + split[1];
     }
     return sourceLine;
 }
