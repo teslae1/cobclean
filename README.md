@@ -16,6 +16,9 @@ npm test
   - [X] for contents lets go with col 11 align for now
   - [X] for move inline to - seperate to two lines
   - [ ] move align indents
+    - [ ] remember to listen on stopformatting bool
+    - [ ] cleanup unused stuff
+    - [ ] fix todos in code
 		const init = `
        MYHEADER |SECTION.
            MOVE A IN AGROUP 
@@ -37,6 +40,9 @@ npm test
            .
 		`;
   - [ ] for anything that is beyond border we need to make it pretty
+  - [ ] ensure handles no in param
+  - [ ] consider scenario where move group is seperated by a comment line if should still do move grouping
+        - and in general consider what should cancel a move group? should it just be another none move thing?
   - [ ] for anything move without general structure at top - follow standard structure
 		const init = `
        MYHEADER |SECTION.
@@ -80,6 +86,7 @@ npm test
         - if so we want to break the line somewhere for all in that move group
   - [ ] support same kind of formatting from video
 - [ ] formatter able to align everything to do with paragraph 
+- [ ] consider better implementation of log error
 - [ ] support unit test formatter
 - [X] keep mouse at expected line
 - [ ] support a good way of detecting end when not another procedure like a copybook

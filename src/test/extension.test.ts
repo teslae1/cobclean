@@ -11,7 +11,7 @@ suite('Extension Test Suite', () => {
        MYHEADER |SECTION.
            MOVE A IN AGROUP 
              TO A IN BGROUP
-           MOVE AA IN AGROUP 
+           MOVE AA     IN AGROUP 
              TO AA IN BGROUP
            MOVE AAA IN AGROUP 
              TO AAA IN BGROUP

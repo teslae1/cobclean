@@ -1,3 +1,4 @@
+import { format } from 'path';
 import * as vscode from 'vscode';
 
 const stringLiteralStartChar = "'";
@@ -52,20 +53,23 @@ async function formatProcedureFromHeaderUntilNextHeaderOrEndAsync(
     procedureHeaderStartLineIndex: number,
     sourceLines: string[], editor: vscode.TextEditor): Promise<void> {
 
-    let newSource = toUpperCaseExcludingStringLiterals(sourceLines[procedureHeaderStartLineIndex]);
-    newSource = indentHeader(newSource);
-    newSource += "\n";
     let procedureEndLineIndex = sourceLines.length;
-    for (let lineIndex = procedureHeaderStartLineIndex + 1; lineIndex < sourceLines.length; lineIndex++) {
-        if (isProcedureHeader(sourceLines[lineIndex])) {
-            procedureEndLineIndex = lineIndex;
+    let formattedLines : string[] = [];
+    for(let i = procedureHeaderStartLineIndex; i < sourceLines.length;i++){
+        if (i > procedureHeaderStartLineIndex && isProcedureHeader(sourceLines[i])) {
+            procedureEndLineIndex = i;
             break;
         }
-        newSource += formatSourceLine(sourceLines[lineIndex]);
-        if(lineIndex < sourceLines.length - 1){
-            newSource += "\n";
+        else{
+            formattedLines.push(sourceLines[i]);
         }
     }
+
+    formattedLines = doUppercasing(formattedLines);
+    formattedLines = doBasicIndent(formattedLines);
+    formattedLines = doMoveIdent(formattedLines);
+
+    const newSource = createNewSourceStrFromLines(formattedLines, procedureEndLineIndex, sourceLines);
     const startPosition = new vscode.Position(procedureHeaderStartLineIndex, 0);
     const endPosition = new vscode.Position(procedureEndLineIndex, 0);
     const range = new vscode.Range(startPosition, endPosition);
@@ -98,15 +102,6 @@ function toUpperCaseExcludingStringLiterals(sourceLine: string): string {
         }
     }
     return uppercasedSourceLine;
-}
-
-function formatSourceLine(initialSourceLine: string) {
-    let sourceLine = toUpperCaseExcludingStringLiterals(initialSourceLine);
-    sourceLine = indentProcedureSourceLine(sourceLine);
-    if(sourceLine.trim().startsWith(MOVE_KEYWORD)){
-        sourceLine = formatMove(sourceLine);
-    }
-    return sourceLine;
 }
 
 function indentProcedureSourceLine(sourceLine: string): string {
@@ -149,20 +144,66 @@ function moveStartOfNonWhitespaceToIndex(sourceLine: string, index: number): str
     return sourceLine;
 }
 
+function doMoveIdent(formattedLines: string[]): string[] {
+    formattedLines = doMoveLineBreakOnToTarget(formattedLines);
+    formattedLines = doMoveIdentByIn(formattedLines);
+    return formattedLines;
+}
 
-function formatMove(sourceLine: string): string {
-    const moveHasInlineTo = sourceLine.includes(TO_KEYWORD);
-    if(moveHasInlineTo){
-        const split = sourceLine.split(TO_KEYWORD);
-        sourceLine = split[0] + "\n             "+ TO_KEYWORD + split[1];
+function doMoveIdentByIn(formattedLines: string[]) : string[] {
+    //find a move group start index
+
+    //identify the end of the move group and the longest length arg name of any
+    //move ARG og to ARG
+    //  end of move is defined as end of array or something that is not comment, move or to 
+
+    // target index is then index 17 + length of longest param
+
+    //now iterate from start to end of that group and make the in param start at that target foreach of the moves
+}
+
+function doMoveLineBreakOnToTarget(formattedLines: string[]): string[] {
+    for(let i = 0; i < formattedLines.length;i++){
+        const line = formattedLines[i];
+        if(line.trim().startsWith(MOVE_KEYWORD)){
+            if(line.includes(TO_KEYWORD)){
+                const split = line.split(TO_KEYWORD);
+                const newToLine = "             "+ TO_KEYWORD + split[1];
+                formattedLines[i] = split[0];
+                formattedLines.splice(i + 1, 0, newToLine);
+                i++;
+            }
+        }
     }
-    // if matches current move context (in params)
-    // and is currently not following max align standard 
-    //   if current is bigger than max align 
-    //     set new max align and make parsing start over at first move again
-    //   if current is smaller than max align
-    //     edit it to follow max align and continue
-    //
-    return sourceLine;
+    return formattedLines;
+}
+
+function doUppercasing(formattedLines: string[]): string[] {
+    for(let i = 0; i < formattedLines.length;i++){
+        formattedLines[i] = toUpperCaseExcludingStringLiterals(formattedLines[i]);
+    }
+    return formattedLines;
+}
+
+function doBasicIndent(formattedLines: string[]): string[] {
+    formattedLines[0] = indentHeader(formattedLines[0]);
+    for(let i = 1; i < formattedLines.length;i++){
+        formattedLines[i] = indentProcedureSourceLine(formattedLines[i]);
+    }
+    return formattedLines;
+}
+
+function createNewSourceStrFromLines(formattedLines: string[], procedureEndLineIndex: number, sourceLines: string[]): string {
+    let newSource = "";
+    for(let i = 0; i < formattedLines.length;i++){
+        newSource += formattedLines[i];
+        if(i < formattedLines.length-1){
+            newSource += "\n";
+        }
+        else if(procedureEndLineIndex != sourceLines.length && formattedLines[i].trim().length == 0){
+            newSource += "\n";
+        }
+    }
+    return newSource;
 }
 
