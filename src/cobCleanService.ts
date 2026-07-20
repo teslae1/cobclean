@@ -5,6 +5,8 @@ const stringLiteralStartChar = "'";
 const commentChar = "*";
 const MOVE_KEYWORD = "MOVE";
 const TO_KEYWORD = "TO";
+const IN_KEYWORD = "IN";
+const AMOUNT_SPACES_FOR_MARGIN_2 = "           ";
 
 export class CobCleanService {
 	async formatProcedureAsync() : Promise<void> {
@@ -152,14 +154,45 @@ function doMoveIdent(formattedLines: string[]): string[] {
 
 function doMoveIdentByIn(formattedLines: string[]) : string[] {
     //find a move group start index
+    const moveGroups = extractMoveGroups(formattedLines);
 
-    //identify the end of the move group and the longest length arg name of any
-    //move ARG og to ARG
-    //  end of move is defined as end of array or something that is not comment, move or to 
+    //foreach group
+    for(let i = 0; i < moveGroups.length;i++){
+        const group = moveGroups[i];
+        let endOfGroupLineIndex = -1;
+        let largestLenOfArg = 1;
+        for(let j = 0; j < group.length;j++){
+            const statement = group[j];
+            if(statement.moveArg.value.length > largestLenOfArg){
+                largestLenOfArg = statement.moveArg.value.length;
+            }
+            if(statement.toArg.value.length > largestLenOfArg){
+                largestLenOfArg = statement.toArg.value.length;
+            }
+            if(j == group.length - 1){
+                endOfGroupLineIndex = statement.toInArgs[statement.toInArgs.length - 1].lineIndex;
+            }
+        }
+        const targetIndexOfIn = 17 + largestLenOfArg;
+        const groupFormattedLines : string[] = [];
+        for(let j = 0;j < group.length;j++){
+            const statement = group[j];
+            let formattedLine = AMOUNT_SPACES_FOR_MARGIN_2 + MOVE_KEYWORD + " " + statement.toArg.value;
+            while(formattedLine.length < targetIndexOfIn){
+                formattedLine += " ";
+            }
+            for(let k = 0; k < statement.moveInArgs.length;k++){
+                formattedLine += " " + IN_KEYWORD + " " + statement.moveInArgs[k].value;
+            }
+            groupFormattedLines.push(formattedLine);
+        }
+        //identify the to and from lines that needs replaced
+        //remove those and replace with the new ones
+    }
 
-    // target index is then index 17 + length of longest param
 
-    //now iterate from start to end of that group and make the in param start at that target foreach of the moves
+
+    return formattedLines;
 }
 
 function doMoveLineBreakOnToTarget(formattedLines: string[]): string[] {
@@ -205,5 +238,119 @@ function createNewSourceStrFromLines(formattedLines: string[], procedureEndLineI
         }
     }
     return newSource;
+}
+
+function extractMoveGroups(formattedLines: string[]) : MoveToStatement[][] {
+    const moveGroups : MoveToStatement[][] = [];
+    let currGroupIndex = -1;
+    let currentlyParsingMoveGroup = false;
+    for(let i = 0; i < formattedLines.length;i++){
+        const line = formattedLines[i];
+        if (isComment(line)) { continue; }
+        if (!line.trim().startsWith(MOVE_KEYWORD)) {
+            currentlyParsingMoveGroup = false;
+            continue;
+        }
+        
+        const moveStatement = extractMoveStatement(formattedLines, i);
+        if(!moveStatement){
+            continue;
+        }
+        const lastElementOfToStatement = moveStatement.toInArgs[moveStatement.toInArgs.length - 1];
+        i = lastElementOfToStatement.lineIndex;
+        if(!currentlyParsingMoveGroup){
+            currentlyParsingMoveGroup = true;
+            moveGroups.push([]);
+            currGroupIndex++;
+        }
+
+        moveGroups[currGroupIndex].push(moveStatement);
+    }
+
+    return moveGroups;
+}
+
+interface MoveToStatement{
+    moveArg: LineItem,
+    moveInArgs: LineItem[],
+    toArg: LineItem,
+    toInArgs: LineItem[],
+}
+
+interface LineItem{
+    value: string,
+    lineIndex: number
+}
+
+enum MoveStatementParsingState {
+    LocatingMoveArg,
+    LocatingMoveInStatements,
+    LocatingToArg,
+    LocatingToInStatements,
+    Done
+}
+
+function extractMoveStatement(formattedLines: string[], indexOfFoundMove: number) : MoveToStatement | undefined {
+    let moveArg : LineItem | undefined = undefined;
+    let toArg : LineItem | undefined = undefined;
+    let moveInArgs : LineItem[] = [];
+    let toInArgs : LineItem[] = [];
+    let state = MoveStatementParsingState.LocatingMoveArg;
+    let lastWord = "";
+    for(let i = indexOfFoundMove;i < formattedLines.length && state != MoveStatementParsingState.Done;i++){
+        const line = formattedLines[i];
+        if (isComment(line)) { continue; }
+        const words = line.trim().split(" ");
+        for(let j = 0; j < words.length && state != MoveStatementParsingState.Done;j++){
+            switch(state){
+                case MoveStatementParsingState.LocatingMoveArg:
+                    if (lastWord == MOVE_KEYWORD) {
+                        moveArg = { value: words[j], lineIndex: i };
+                        state = MoveStatementParsingState.LocatingMoveInStatements;
+                    }
+                    break;
+                case MoveStatementParsingState.LocatingMoveInStatements:
+                    if (lastWord == IN_KEYWORD) {
+                        moveInArgs.push({ value: words[j], lineIndex: i });
+                    }
+                    if (words[j] == TO_KEYWORD) {
+                        state = MoveStatementParsingState.LocatingToArg;
+                    }
+                    break;
+                case MoveStatementParsingState.LocatingToArg:
+                    if(lastWord == TO_KEYWORD){
+                        toArg = {value: words[j], lineIndex: i};
+                        state = MoveStatementParsingState.LocatingToInStatements;
+                    }
+                    break;
+                case MoveStatementParsingState.LocatingToInStatements:
+                    if(lastWord == IN_KEYWORD){
+                        toInArgs.push({ value: words[j], lineIndex: i });
+                    }
+                    else if(words[j] == IN_KEYWORD){
+                        //also fine for parsing
+                    }
+                    else{
+                        state = MoveStatementParsingState.Done;
+                    }
+                    break;
+            }
+
+            lastWord = words[j];
+        }
+    }
+
+    if(!moveArg){
+        return;
+    }
+    if(!toArg){
+        return;
+    }
+    return {
+        moveArg: moveArg,
+        moveInArgs: moveInArgs, 
+        toArg: toArg, 
+        toInArgs: toInArgs
+    };
 }
 
