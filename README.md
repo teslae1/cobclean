@@ -16,7 +16,7 @@ npm test
   - [X] for contents lets go with col 11 align for now
   - [X] for move inline to - seperate to two lines
   - [ ] move align indents
-    - [ ] rewrite to do the linebreak and the other thing based on parsed output
+    - [x] rewrite to do the linebreak and the other thing based on parsed output
     - [ ] remember to handle no in param things
     - [ ] remember to test for offset of multiple groups where line amount changes
     - [ ] cleanup unused stuff

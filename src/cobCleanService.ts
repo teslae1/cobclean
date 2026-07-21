@@ -14,24 +14,28 @@ export class CobCleanService {
         if (!editor) { return; }
         const sourceStr = editor.document.getText();
         if (!sourceStr) { return; }
-        //look backwards to determine start of procedure
-        const currentCursorPos = editor.selection.active;
-        const currentCursorLine = currentCursorPos.line;
         const sourceLines = sourceStr.split('\n');
-        let procedureHeaderStartLine = -1;
-        for(let i = currentCursorLine; i >= 0;i--){
-            if(isProcedureHeader(sourceLines[i])){
-                procedureHeaderStartLine = i;
-                break;
-            }
-        }
-        if(procedureHeaderStartLine === -1){
-            return;
-        }
-
+        const procedureHeaderStartLine = getProcedureHeaderStartLine(editor, sourceLines);
+        if(!procedureHeaderStartLine){ return; }
         await formatProcedureFromHeaderUntilNextHeaderOrEndAsync(procedureHeaderStartLine, sourceLines, editor);
 	}
+}
 
+function getProcedureHeaderStartLine(editor: vscode.TextEditor, sourceLines: string[]) : number | undefined{
+    const currentCursorPos = editor.selection.active;
+    const currentCursorLine = currentCursorPos.line;
+    let procedureHeaderStartLine = -1;
+    //look backwards to determine start of procedure
+    for (let i = currentCursorLine; i >= 0; i--) {
+        if (isProcedureHeader(sourceLines[i])) {
+            procedureHeaderStartLine = i;
+            break;
+        }
+    }
+    if (procedureHeaderStartLine === -1) {
+        return;
+    }
+    return procedureHeaderStartLine;
 }
 
 function isProcedureHeader(sourceLine: string) : Boolean {
@@ -55,25 +59,16 @@ async function formatProcedureFromHeaderUntilNextHeaderOrEndAsync(
     procedureHeaderStartLineIndex: number,
     sourceLines: string[], editor: vscode.TextEditor): Promise<void> {
 
-    let procedureEndLineIndex = sourceLines.length;
-    let formattedLines : string[] = [];
-    for(let i = procedureHeaderStartLineIndex; i < sourceLines.length;i++){
-        if (i > procedureHeaderStartLineIndex && isProcedureHeader(sourceLines[i])) {
-            procedureEndLineIndex = i;
-            break;
-        }
-        else{
-            formattedLines.push(sourceLines[i]);
-        }
-    }
+    const sourceSection = getSourceOfprocedureToFormat(procedureHeaderStartLineIndex, sourceLines);
+    let formattedLines = sourceSection.sourceLines;
 
     formattedLines = doUppercasing(formattedLines);
     formattedLines = doBasicIndent(formattedLines);
     formattedLines = doMoveIdent(formattedLines);
 
-    const newSource = createNewSourceStrFromLines(formattedLines, procedureEndLineIndex, sourceLines);
+    const newSource = createNewSourceStrFromLines(formattedLines, sourceSection.procedureEndLineIndex, sourceLines);
     const startPosition = new vscode.Position(procedureHeaderStartLineIndex, 0);
-    const endPosition = new vscode.Position(procedureEndLineIndex, 0);
+    const endPosition = new vscode.Position(sourceSection.procedureEndLineIndex, 0);
     const range = new vscode.Range(startPosition, endPosition);
     await editor.edit(editBuilder => {
         editBuilder.replace(range, newSource);
@@ -164,41 +159,13 @@ function doMoveIdent(formattedLines: string[]) : string[] {
                 largestLenOfArg = statement.toArg.value.length;
             }
             if(j === group.length - 1){
-                endOfGroupLineIndex = statement.toInArgs[statement.toInArgs.length - 1].lineIndex;
+                endOfGroupLineIndex =getLastLineIndexOfStatement(statement); 
             }
         }
+
         const targetIndexOfIn = 16 + largestLenOfArg;
-        const groupFormattedLines : string[] = [];
-        for(let j = 0;j < group.length;j++){
-            const statement = group[j];
-            let moveLine = AMOUNT_SPACES_FOR_MARGIN_2 + MOVE_KEYWORD + " " + statement.moveArg.value;
-            while(moveLine.length < targetIndexOfIn){
-                moveLine += " ";
-            }
-            for(let k = 0; k < statement.moveInArgs.length;k++){
-                moveLine += " " + IN_KEYWORD + " " + statement.moveInArgs[k].value;
-            }
-            groupFormattedLines.push(moveLine);
-            let toLine = AMOUNT_SPACES_FOR_MARGIN_2 + "  " + TO_KEYWORD + " " + statement.toArg.value;
-            while(toLine.length < targetIndexOfIn){
-                toLine += " ";
-            }
-            for(let k = 0; k < statement.toInArgs.length;k++){
-                toLine += " " + IN_KEYWORD + " " + statement.toInArgs[k].value;
-            }
-            groupFormattedLines.push(toLine);
-        }
-        const startOfGroupLineIndex = group[0].moveArg.lineIndex;
-        const amountOfLinesToRemove = endOfGroupLineIndex - startOfGroupLineIndex + 1;
-        const amountLinesToAdd = groupFormattedLines.length;
-        
-        formattedLines.splice(startOfGroupLineIndex + offset, amountOfLinesToRemove, ...groupFormattedLines);
-        if(amountLinesToAdd < amountOfLinesToRemove){
-            offset -= amountOfLinesToRemove - amountLinesToAdd;
-        }
-        else if(amountLinesToAdd > amountOfLinesToRemove){
-            offset += amountLinesToAdd - amountOfLinesToRemove;
-        }
+        const groupFormattedLines = createGroupFormattedLines(group, targetIndexOfIn);
+        offset = replaceFormattedLinesWithNewGroupFormattedLines(formattedLines, groupFormattedLines, offset, group, endOfGroupLineIndex);
     }
 
     return formattedLines;
@@ -249,8 +216,9 @@ function extractMoveGroups(formattedLines: string[]) : MoveToStatement[][] {
         if(!moveStatement){
             continue;
         }
-        const lastElementOfToStatement = moveStatement.toInArgs[moveStatement.toInArgs.length - 1];
-        i = lastElementOfToStatement.lineIndex;
+
+        const lastLineOfStatement = getLastLineIndexOfStatement(moveStatement);
+        i = lastLineOfStatement;
         if(!currentlyParsingMoveGroup){
             currentlyParsingMoveGroup = true;
             moveGroups.push([]);
@@ -295,6 +263,7 @@ function extractMoveStatement(formattedLines: string[], indexOfFoundMove: number
         if (isComment(line)) { continue; }
         const words = line.trim().split(" ");
         for(let j = 0; j < words.length && state != MoveStatementParsingState.Done;j++){
+            if(words[j].trim().length == 0){ continue; }
             switch(state){
                 case MoveStatementParsingState.LocatingMoveArg:
                     if (lastWord === MOVE_KEYWORD) {
@@ -345,5 +314,79 @@ function extractMoveStatement(formattedLines: string[], indexOfFoundMove: number
         toArg: toArg, 
         toInArgs: toInArgs
     };
+}
+
+interface SourceSection{
+    procedureEndLineIndex: number,
+    sourceLines: string[]
+}
+
+function getSourceOfprocedureToFormat(procedureHeaderStartLineIndex: number, sourceLines: string[]) : SourceSection {
+    let linesToFormat : string[] = [];
+    let procedureEndLineIndex = sourceLines.length;
+    for(let i = procedureHeaderStartLineIndex; i < sourceLines.length;i++){
+        if (i > procedureHeaderStartLineIndex && isProcedureHeader(sourceLines[i])) {
+            procedureEndLineIndex = i;
+            break;
+        }
+        else{
+            linesToFormat.push(sourceLines[i]);
+        }
+    }
+    return { procedureEndLineIndex: procedureEndLineIndex, sourceLines: linesToFormat };
+}
+
+function createGroupFormattedLines(group: MoveToStatement[], targetIndexOfIn: number) : string[]{
+        const groupFormattedLines : string[] = []; 
+        for(let j = 0;j < group.length;j++){
+            const statement = group[j];
+            let moveLine = AMOUNT_SPACES_FOR_MARGIN_2 + MOVE_KEYWORD + " " + statement.moveArg.value;
+            while(moveLine.length < targetIndexOfIn){
+                moveLine += " ";
+            }
+            for(let k = 0; k < statement.moveInArgs.length;k++){
+                moveLine += " " + IN_KEYWORD + " " + statement.moveInArgs[k].value;
+            }
+            groupFormattedLines.push(moveLine);
+            let toLine = AMOUNT_SPACES_FOR_MARGIN_2 + "  " + TO_KEYWORD + " " + statement.toArg.value;
+            while(toLine.length < targetIndexOfIn){
+                toLine += " ";
+            }
+            for(let k = 0; k < statement.toInArgs.length;k++){
+                toLine += " " + IN_KEYWORD + " " + statement.toInArgs[k].value;
+            }
+            groupFormattedLines.push(toLine);
+        }
+
+        return groupFormattedLines;
+}
+
+//returns new offset
+function replaceFormattedLinesWithNewGroupFormattedLines(formattedLines: string[],
+    groupFormattedLines: string[],
+    offset: number,
+    group: MoveToStatement[],
+    endOfGroupLineIndex: number): number {
+    const startOfGroupLineIndex = group[0].moveArg.lineIndex;
+    const amountOfLinesToRemove = endOfGroupLineIndex - startOfGroupLineIndex + 1;
+    const amountLinesToAdd = groupFormattedLines.length;
+
+    formattedLines.splice(startOfGroupLineIndex + offset, amountOfLinesToRemove, ...groupFormattedLines);
+    if (amountLinesToAdd < amountOfLinesToRemove) {
+        offset -= amountOfLinesToRemove - amountLinesToAdd;
+    }
+    else if (amountLinesToAdd > amountOfLinesToRemove) {
+        offset += amountLinesToAdd - amountOfLinesToRemove;
+    }
+    return offset;
+}
+
+function getLastLineIndexOfStatement(statement: any) : number{
+    if(statement.toInArgs.length > 0){
+        return statement.toInArgs[statement.toInArgs.length - 1].lineIndex;
+    }
+    else{
+        return statement.toArg.lineIndex;
+    }
 }
 
