@@ -18,6 +18,7 @@ npm test
   - [ ] move align indents
     - [ ] rewrite to do the linebreak and the other thing based on parsed output
     - [ ] remember to handle no in param things
+    - [ ] remember to test for offset of multiple groups where line amount changes
     - [ ] cleanup unused stuff
     - [ ] fix todos in code
 		const init = `
@@ -87,6 +88,7 @@ npm test
         - if so we want to break the line somewhere for all in that move group
   - [ ] support same kind of formatting from video
 - [ ] formatter able to align everything to do with paragraph 
+- [ ] support multiple move targets in formatting
 - [ ] consider better implementation of log error
 - [ ] support unit test formatter
 - [X] keep mouse at expected line

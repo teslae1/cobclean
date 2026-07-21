@@ -146,17 +146,11 @@ function moveStartOfNonWhitespaceToIndex(sourceLine: string, index: number): str
     return sourceLine;
 }
 
-function doMoveIdent(formattedLines: string[]): string[] {
-    formattedLines = doMoveLineBreakOnToTarget(formattedLines);
-    formattedLines = doMoveIdentByIn(formattedLines);
-    return formattedLines;
-}
-
-function doMoveIdentByIn(formattedLines: string[]) : string[] {
-    //find a move group start index
+function doMoveIdent(formattedLines: string[]) : string[] {
     const moveGroups = extractMoveGroups(formattedLines);
 
-    //foreach group
+    let offset = 0;
+
     for(let i = 0; i < moveGroups.length;i++){
         const group = moveGroups[i];
         let endOfGroupLineIndex = -1;
@@ -169,45 +163,44 @@ function doMoveIdentByIn(formattedLines: string[]) : string[] {
             if(statement.toArg.value.length > largestLenOfArg){
                 largestLenOfArg = statement.toArg.value.length;
             }
-            if(j == group.length - 1){
+            if(j === group.length - 1){
                 endOfGroupLineIndex = statement.toInArgs[statement.toInArgs.length - 1].lineIndex;
             }
         }
-        const targetIndexOfIn = 17 + largestLenOfArg;
+        const targetIndexOfIn = 16 + largestLenOfArg;
         const groupFormattedLines : string[] = [];
         for(let j = 0;j < group.length;j++){
             const statement = group[j];
-            let formattedLine = AMOUNT_SPACES_FOR_MARGIN_2 + MOVE_KEYWORD + " " + statement.toArg.value;
-            while(formattedLine.length < targetIndexOfIn){
-                formattedLine += " ";
+            let moveLine = AMOUNT_SPACES_FOR_MARGIN_2 + MOVE_KEYWORD + " " + statement.moveArg.value;
+            while(moveLine.length < targetIndexOfIn){
+                moveLine += " ";
             }
             for(let k = 0; k < statement.moveInArgs.length;k++){
-                formattedLine += " " + IN_KEYWORD + " " + statement.moveInArgs[k].value;
+                moveLine += " " + IN_KEYWORD + " " + statement.moveInArgs[k].value;
             }
-            groupFormattedLines.push(formattedLine);
+            groupFormattedLines.push(moveLine);
+            let toLine = AMOUNT_SPACES_FOR_MARGIN_2 + "  " + TO_KEYWORD + " " + statement.toArg.value;
+            while(toLine.length < targetIndexOfIn){
+                toLine += " ";
+            }
+            for(let k = 0; k < statement.toInArgs.length;k++){
+                toLine += " " + IN_KEYWORD + " " + statement.toInArgs[k].value;
+            }
+            groupFormattedLines.push(toLine);
         }
-        //identify the to and from lines that needs replaced
-        //remove those and replace with the new ones
-    }
-
-
-
-    return formattedLines;
-}
-
-function doMoveLineBreakOnToTarget(formattedLines: string[]): string[] {
-    for(let i = 0; i < formattedLines.length;i++){
-        const line = formattedLines[i];
-        if(line.trim().startsWith(MOVE_KEYWORD)){
-            if(line.includes(TO_KEYWORD)){
-                const split = line.split(TO_KEYWORD);
-                const newToLine = "             "+ TO_KEYWORD + split[1];
-                formattedLines[i] = split[0];
-                formattedLines.splice(i + 1, 0, newToLine);
-                i++;
-            }
+        const startOfGroupLineIndex = group[0].moveArg.lineIndex;
+        const amountOfLinesToRemove = endOfGroupLineIndex - startOfGroupLineIndex + 1;
+        const amountLinesToAdd = groupFormattedLines.length;
+        
+        formattedLines.splice(startOfGroupLineIndex + offset, amountOfLinesToRemove, ...groupFormattedLines);
+        if(amountLinesToAdd < amountOfLinesToRemove){
+            offset -= amountOfLinesToRemove - amountLinesToAdd;
+        }
+        else if(amountLinesToAdd > amountOfLinesToRemove){
+            offset += amountLinesToAdd - amountOfLinesToRemove;
         }
     }
+
     return formattedLines;
 }
 
@@ -233,7 +226,7 @@ function createNewSourceStrFromLines(formattedLines: string[], procedureEndLineI
         if(i < formattedLines.length-1){
             newSource += "\n";
         }
-        else if(procedureEndLineIndex != sourceLines.length && formattedLines[i].trim().length == 0){
+        else if(procedureEndLineIndex != sourceLines.length && formattedLines[i].trim().length === 0){
             newSource += "\n";
         }
     }
@@ -304,30 +297,30 @@ function extractMoveStatement(formattedLines: string[], indexOfFoundMove: number
         for(let j = 0; j < words.length && state != MoveStatementParsingState.Done;j++){
             switch(state){
                 case MoveStatementParsingState.LocatingMoveArg:
-                    if (lastWord == MOVE_KEYWORD) {
+                    if (lastWord === MOVE_KEYWORD) {
                         moveArg = { value: words[j], lineIndex: i };
                         state = MoveStatementParsingState.LocatingMoveInStatements;
                     }
                     break;
                 case MoveStatementParsingState.LocatingMoveInStatements:
-                    if (lastWord == IN_KEYWORD) {
+                    if (lastWord === IN_KEYWORD) {
                         moveInArgs.push({ value: words[j], lineIndex: i });
                     }
-                    if (words[j] == TO_KEYWORD) {
+                    if (words[j] === TO_KEYWORD) {
                         state = MoveStatementParsingState.LocatingToArg;
                     }
                     break;
                 case MoveStatementParsingState.LocatingToArg:
-                    if(lastWord == TO_KEYWORD){
+                    if(lastWord === TO_KEYWORD){
                         toArg = {value: words[j], lineIndex: i};
                         state = MoveStatementParsingState.LocatingToInStatements;
                     }
                     break;
                 case MoveStatementParsingState.LocatingToInStatements:
-                    if(lastWord == IN_KEYWORD){
+                    if(lastWord === IN_KEYWORD){
                         toInArgs.push({ value: words[j], lineIndex: i });
                     }
-                    else if(words[j] == IN_KEYWORD){
+                    else if(words[j] === IN_KEYWORD){
                         //also fine for parsing
                     }
                     else{

@@ -19,11 +19,11 @@ suite('Extension Test Suite', () => {
 `;
 		const exp = `
        MYHEADER SECTION.
-           MOVE A   IN AGROUP 
+           MOVE A   IN AGROUP
              TO A   IN BGROUP
-           MOVE AA  IN AGROUP 
+           MOVE AA  IN AGROUP
              TO AA  IN BGROUP
-           MOVE AAA IN AGROUP 
+           MOVE AAA IN AGROUP
              TO AAA IN BGROUP
            .
 `;
@@ -38,7 +38,7 @@ suite('Extension Test Suite', () => {
 `;
 		const exp = `
        MYHEADER SECTION.
-           MOVE A IN AGROUP 
+           MOVE A IN AGROUP
              TO A IN BGROUP
            .
 `;
