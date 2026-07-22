@@ -4,7 +4,56 @@ import * as vscode from 'vscode';
 const cursorChar = '|';
 
 suite('Extension Test Suite', () => {
+
 	vscode.window.showInformationMessage('Start all tests.');
+
+	test('for a move with many in params that would wind up beyond margin 2 - do more idents', async function () {
+		const initial = `
+       MYHEADER |SECTION.
+           MOVE A  IN AGROUP 
+             TO A IN BGROUP IN BGROUP IN BGROUP IN BGROUP IN BGROUP IN BG
+           MOVE AA IN AGROUP IN AGROUP IN AGROUP IN AGROUP IN AGROUP IN B
+             TO AA IN BGROUP
+           .
+`;
+		const exp = `
+       MYHEADER SECTION.
+           MOVE A
+                IN AGROUP
+             TO A
+                IN BGROUP IN BGROUP IN BGROUP IN BGROUP IN BGROUP IN BG
+           MOVE AA
+                IN AGROUP IN AGROUP IN AGROUP IN AGROUP IN AGROUP IN B
+             TO AA
+                IN BGROUP
+           .
+`;
+		await assertFormatProcedureChangesContentAsync(initial, exp);
+	});
+
+	test('for a move that would wind up beyond margin 2 - do more idents', async function () {
+		const initial = `
+       MYHEADER |SECTION.
+           MOVE A  IN AGROUP 
+             TO A IN BGROUPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+           MOVE AA IN AGROUPBGROUPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+             TO AA IN BGROUP
+           .
+`;
+		const exp = `
+       MYHEADER SECTION.
+           MOVE A
+                IN AGROUP
+             TO A
+                IN BGROUPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+           MOVE AA
+                IN AGROUPBGROUPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+             TO AA
+                IN BGROUP
+           .
+`;
+		await assertFormatProcedureChangesContentAsync(initial, exp);
+	});
 
 	test('move align that decreases line count handles multigroup', async function () {
 		const initial = `

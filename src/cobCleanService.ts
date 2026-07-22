@@ -1,4 +1,3 @@
-import { format } from 'path';
 import * as vscode from 'vscode';
 
 const stringLiteralStartChar = "'";
@@ -7,6 +6,8 @@ const MOVE_KEYWORD = "MOVE";
 const TO_KEYWORD = "TO";
 const IN_KEYWORD = "IN";
 const AMOUNT_SPACES_FOR_MARGIN_2 = "           ";
+const MARGIN2_MAX_LINE_LEN = 72;
+
 
 export class CobCleanService {
 	async formatProcedureAsync() : Promise<void> {
@@ -336,33 +337,12 @@ function getSourceOfprocedureToFormat(procedureHeaderStartLineIndex: number, sou
     return { procedureEndLineIndex: procedureEndLineIndex, sourceLines: linesToFormat };
 }
 
-function createGroupFormattedLines(group: MoveToStatement[], targetIndexOfIn: number) : string[]{
-        const groupFormattedLines : string[] = []; 
-        for(let j = 0;j < group.length;j++){
-            const statement = group[j];
-            let moveLine = AMOUNT_SPACES_FOR_MARGIN_2 + MOVE_KEYWORD + " " + statement.moveArg.value;
-            if(statement.moveInArgs.length > 0){
-                while (moveLine.length < targetIndexOfIn) {
-                    moveLine += " ";
-                }
-            }
-            for(let k = 0; k < statement.moveInArgs.length;k++){
-                moveLine += " " + IN_KEYWORD + " " + statement.moveInArgs[k].value;
-            }
-            groupFormattedLines.push(moveLine);
-            let toLine = AMOUNT_SPACES_FOR_MARGIN_2 + "  " + TO_KEYWORD + " " + statement.toArg.value;
-            if (statement.toInArgs.length > 0) {
-                while (toLine.length < targetIndexOfIn) {
-                    toLine += " ";
-                }
-            }
-            for(let k = 0; k < statement.toInArgs.length;k++){
-                toLine += " " + IN_KEYWORD + " " + statement.toInArgs[k].value;
-            }
-            groupFormattedLines.push(toLine);
-        }
-
-        return groupFormattedLines;
+function createGroupFormattedLines(group: MoveToStatement[], targetIndexOfIn: number): string[] {
+    let groupFormattedLines = createGroupFormattedLinesWithIdentSettings(group, targetIndexOfIn, false);
+    if (groupFormattedLines.some(l => l.length > MARGIN2_MAX_LINE_LEN)) {
+        groupFormattedLines = createGroupFormattedLinesWithIdentSettings(group, targetIndexOfIn, true);
+    }
+    return groupFormattedLines;
 }
 
 //returns new offset
@@ -392,5 +372,49 @@ function getLastLineIndexOfStatement(statement: any) : number{
     else{
         return statement.toArg.lineIndex;
     }
+}
+
+function createMoveLine(keyword: string, 
+    arg: string, 
+    inArgs: LineItem[], 
+    targetIndexOfIn: number,
+    doSeperateLineForIn: boolean): string {
+    const keywordIncludingSpaces = keyword == MOVE_KEYWORD ? keyword : "  " + keyword;
+    let moveLine = AMOUNT_SPACES_FOR_MARGIN_2 + keywordIncludingSpaces + " " + arg;
+    if (inArgs.length > 0 && !doSeperateLineForIn) {
+        while (moveLine.length < targetIndexOfIn) {
+            moveLine += " ";
+        }
+    }
+    if (doSeperateLineForIn) {
+        moveLine += "\n               ";
+    }
+    for (let k = 0; k < inArgs.length; k++) {
+        moveLine += " " + IN_KEYWORD + " " + inArgs[k].value;
+    }
+
+    return moveLine;
+}
+
+function createGroupFormattedLinesWithIdentSettings(group: MoveToStatement[],
+    targetIndexOfIn: number,
+    doSeperateLineForIn: boolean): string[] {
+    const groupFormattedLines: string [] = [];
+    for (let j = 0; j < group.length; j++) {
+        const statement = group[j];
+        const moveLine = createMoveLine(MOVE_KEYWORD, 
+            statement.moveArg.value, 
+            statement.moveInArgs, 
+            targetIndexOfIn, 
+            doSeperateLineForIn);
+        groupFormattedLines.push(moveLine);
+        const toLine = createMoveLine(TO_KEYWORD, 
+            statement.toArg.value, 
+            statement.toInArgs, 
+            targetIndexOfIn, 
+            doSeperateLineForIn);
+        groupFormattedLines.push(toLine);
+    }
+    return groupFormattedLines;
 }
 

@@ -15,32 +15,12 @@ npm test
   - [X] for the header (first line) - should start at 9
   - [X] for contents lets go with col 11 align for now
   - [X] for move inline to - seperate to two lines
-  - [ ] move align indents
-    - [x] rewrite to do the linebreak and the other thing based on parsed output
-    - [x] remember to handle no in param things
-    - [ ] remember to test for offset of multiple groups where line amount changes
-    - [ ] cleanup unused stuff
-    - [ ] fix todos in code
-		const init = `
-       MYHEADER |SECTION.
-           MOVE A IN AGROUP 
-             TO A IN BGROUP
-           MOVE AA IN AGROUP 
-             TO AA IN BGROUP
-           MOVE AAA IN AGROUP 
-             TO AAA IN BGROUP
-           .
-		`;
-		const exp = `
-       MYHEADER SECTION.
-           MOVE A   IN AGROUP 
-             TO A   IN BGROUP
-           MOVE AA  IN AGROUP 
-             TO AA  IN BGROUP
-           MOVE AAA IN AGROUP 
-             TO AAA IN BGROUP
-           .
-		`;
+  - [x] move align indents
+    - [X] rewrite to do the linebreak and the other thing based on parsed output
+    - [X] remember to handle no in param things
+    - [X] remember to test for offset of multiple groups where line amount changes
+    - [X] cleanup unused stuff
+    - [x] fix todos in code
   - [ ] for anything that is beyond border we need to make it pretty
   - [ ] ensure handles no in param
   - [ ] consider scenario where move group is seperated by a comment line if should still do move grouping
@@ -89,6 +69,7 @@ npm test
   - [ ] support same kind of formatting from video
 - [ ] formatter able to align everything to do with paragraph 
 - [ ] support multiple move targets in formatting
+- [ ] remove dupliation from createGroupFormattedLines
 - [ ] consider method extractor function
 - [ ] consider auto comment function
 - [ ] consider better implementation of log error
