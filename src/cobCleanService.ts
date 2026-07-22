@@ -119,7 +119,7 @@ function indentHeader(sourceLine: string) : string{
 function moveStartOfNonWhitespaceToIndex(sourceLine: string, index: number): string {
     let firstIndexOfNonWhitespace = -1;
     for(let i = 0; i < sourceLine.length;i++){
-        if(sourceLine[i] != " "){
+        if(sourceLine[i] !== " "){
             firstIndexOfNonWhitespace = i;
             break;
         }
@@ -193,7 +193,7 @@ function createNewSourceStrFromLines(formattedLines: string[], procedureEndLineI
         if(i < formattedLines.length-1){
             newSource += "\n";
         }
-        else if(procedureEndLineIndex != sourceLines.length && formattedLines[i].trim().length === 0){
+        else if(procedureEndLineIndex !== sourceLines.length && formattedLines[i].trim().length === 0){
             newSource += "\n";
         }
     }
@@ -258,11 +258,11 @@ function extractMoveStatement(formattedLines: string[], indexOfFoundMove: number
     let toInArgs : LineItem[] = [];
     let state = MoveStatementParsingState.LocatingMoveArg;
     let lastWord = "";
-    for(let i = indexOfFoundMove;i < formattedLines.length && state != MoveStatementParsingState.Done;i++){
+    for(let i = indexOfFoundMove;i < formattedLines.length && state !== MoveStatementParsingState.Done;i++){
         const line = formattedLines[i];
         if (isComment(line)) { continue; }
         const words = line.trim().split(" ");
-        for(let j = 0; j < words.length && state != MoveStatementParsingState.Done;j++){
+        for(let j = 0; j < words.length && state !== MoveStatementParsingState.Done;j++){
             if(words[j].trim().length == 0){ continue; }
             switch(state){
                 case MoveStatementParsingState.LocatingMoveArg:
@@ -290,7 +290,7 @@ function extractMoveStatement(formattedLines: string[], indexOfFoundMove: number
                         toInArgs.push({ value: words[j], lineIndex: i });
                     }
                     else if(words[j] === IN_KEYWORD){
-                        //also fine for parsing
+                        //skip to next word
                     }
                     else{
                         state = MoveStatementParsingState.Done;
@@ -341,16 +341,20 @@ function createGroupFormattedLines(group: MoveToStatement[], targetIndexOfIn: nu
         for(let j = 0;j < group.length;j++){
             const statement = group[j];
             let moveLine = AMOUNT_SPACES_FOR_MARGIN_2 + MOVE_KEYWORD + " " + statement.moveArg.value;
-            while(moveLine.length < targetIndexOfIn){
-                moveLine += " ";
+            if(statement.moveInArgs.length > 0){
+                while (moveLine.length < targetIndexOfIn) {
+                    moveLine += " ";
+                }
             }
             for(let k = 0; k < statement.moveInArgs.length;k++){
                 moveLine += " " + IN_KEYWORD + " " + statement.moveInArgs[k].value;
             }
             groupFormattedLines.push(moveLine);
             let toLine = AMOUNT_SPACES_FOR_MARGIN_2 + "  " + TO_KEYWORD + " " + statement.toArg.value;
-            while(toLine.length < targetIndexOfIn){
-                toLine += " ";
+            if (statement.toInArgs.length > 0) {
+                while (toLine.length < targetIndexOfIn) {
+                    toLine += " ";
+                }
             }
             for(let k = 0; k < statement.toInArgs.length;k++){
                 toLine += " " + IN_KEYWORD + " " + statement.toInArgs[k].value;

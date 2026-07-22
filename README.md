@@ -89,6 +89,8 @@ npm test
   - [ ] support same kind of formatting from video
 - [ ] formatter able to align everything to do with paragraph 
 - [ ] support multiple move targets in formatting
+- [ ] consider method extractor function
+- [ ] consider auto comment function
 - [ ] consider better implementation of log error
 - [ ] support unit test formatter
 - [X] keep mouse at expected line

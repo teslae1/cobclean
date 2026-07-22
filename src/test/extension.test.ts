@@ -34,7 +34,6 @@ suite('Extension Test Suite', () => {
 		const initial = `
        MYHEADER |SECTION.
            MOVE A TO A 
-           
            .
 `;
 		const exp = `
@@ -55,8 +54,8 @@ suite('Extension Test Suite', () => {
 `;
 		const exp = `
        MYHEADER SECTION.
-           MOVE A  
-             TO A  
+           MOVE A
+             TO A
            .
 `;
 		await assertFormatProcedureChangesContentAsync(initial, exp);
