@@ -3,7 +3,7 @@
   "displayName": "cobclean",
   "publisher": "KarlMogensen",
   "description": "cobol formatter",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.125.0"
   },

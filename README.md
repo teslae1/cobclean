@@ -21,8 +21,7 @@ npm test
     - [X] remember to test for offset of multiple groups where line amount changes
     - [X] cleanup unused stuff
     - [x] fix todos in code
-  - [ ] for anything that is beyond border we need to make it pretty
-  - [ ] ensure handles no in param
+  - [x] for anything that is beyond border we need to make it pretty
   - [ ] consider scenario where move group is seperated by a comment line if should still do move grouping
         - and in general consider what should cancel a move group? should it just be another none move thing?
   - [ ] for anything move without general structure at top - follow standard structure
@@ -80,6 +79,7 @@ npm test
 - [ ] consider format all procedures
 - [ ] once adding more features consider renaming test suite to be only procedure scoped
 - [ ] add test to assert that scope is only current procedure
+- [ ] do pretty readme and consider gif example
 - [ ] formatter also working on testcases
 - [ ] reach first draft publish
 - [ ] future features:
