@@ -17,7 +17,7 @@ npm test
   - [X] for move inline to - seperate to two lines
   - [ ] move align indents
     - [x] rewrite to do the linebreak and the other thing based on parsed output
-    - [ ] remember to handle no in param things
+    - [x] remember to handle no in param things
     - [ ] remember to test for offset of multiple groups where line amount changes
     - [ ] cleanup unused stuff
     - [ ] fix todos in code
