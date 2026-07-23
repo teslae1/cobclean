@@ -22,8 +22,13 @@ npm test
     - [X] cleanup unused stuff
     - [x] fix todos in code
   - [x] for anything that is beyond border we need to make it pretty
-  - [ ] consider scenario where move group is seperated by a comment line if should still do move grouping
-        - and in general consider what should cancel a move group? should it just be another none move thing?
+  - [x] ensure no bug where comment is removed when within a move group
+  - [x] a statement between two move groups should act as seperate groups
+  - [x] fix bug this creates a weird ident
+                move '123' to x in agroup 
+  - [ ] fix bug: preserving all intertwined comments
+    - consider just doing general way of no seperation and preserve any intertwined comments
+  - [ ] ensure it has proper stop for move groups
   - [ ] for anything move without general structure at top - follow standard structure
 		const init = `
        MYHEADER |SECTION.
@@ -68,6 +73,7 @@ npm test
   - [ ] support same kind of formatting from video
 - [ ] formatter able to align everything to do with paragraph 
 - [ ] support multiple move targets in formatting
+  - [ ] remember to still preserve intertwined comments when also supporting multi move targets
 - [ ] remove dupliation from createGroupFormattedLines
 - [ ] consider method extractor function
 - [ ] consider auto comment function

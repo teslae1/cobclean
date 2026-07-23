@@ -7,6 +7,96 @@ suite('Extension Test Suite', () => {
 
 	vscode.window.showInformationMessage('Start all tests.');
 
+
+	test('support intertwined comment between move being preserved', async function () {
+
+		const initial = `
+       MYHEADER |SECTION.
+           MOVE '123' IN BGROUP
+         * COMMENT
+             TO X     IN AGROUP
+           .
+`;
+		const exp = `
+       MYHEADER SECTION.
+           MOVE '123' IN BGROUP
+         * COMMENT
+             TO X     IN AGROUP
+           .
+`;
+		await assertFormatProcedureChangesContentAsync(initial, exp);
+	});
+
+	test('no indent when no in args for move arg', async function () {
+
+		const initial = `
+       MYHEADER |SECTION.
+                move '123' to x in agroup 
+           .
+`;
+		const exp = `
+       MYHEADER SECTION.
+           MOVE '123'
+             TO X IN AGROUP
+           .
+`;
+		await assertFormatProcedureChangesContentAsync(initial, exp);
+	});
+
+	test('a statement between two move groups should act as seperate groups', async function () {
+
+		const initial = `
+       MYHEADER |SECTION.
+           MOVE A    IN AGROUP
+             TO A IN BGROUP
+           MOVE AA    IN AGROUP
+             TO AA  IN BGROUP
+           COMPUTE A = A * B * C
+           MOVE BB IN AGROUP
+             TO BBBB IN BGROUP
+           .
+`;
+		const exp = `
+       MYHEADER SECTION.
+           MOVE A  IN AGROUP
+             TO A  IN BGROUP
+           MOVE AA IN AGROUP
+             TO AA IN BGROUP
+           COMPUTE A = A * B * C
+           MOVE BB   IN AGROUP
+             TO BBBB IN BGROUP
+           .
+`;
+		await assertFormatProcedureChangesContentAsync(initial, exp);
+	});
+
+	test('formatting move group keeps intertwined comments', async function () {
+
+		const initial = `
+       MYHEADER |SECTION.
+           MOVE A   IN AGROUP
+             TO A IN BGROUP
+      * SOME COMMENT
+           MOVE AA  IN AGROUP
+             TO AA  IN BGROUP
+           MOVE AAA IN AGROUP
+             TO AAA IN BGROUP
+           .
+`;
+		const exp = `
+       MYHEADER SECTION.
+           MOVE A IN AGROUP
+             TO A IN BGROUP
+      * SOME COMMENT
+           MOVE AA  IN AGROUP
+             TO AA  IN BGROUP
+           MOVE AAA IN AGROUP
+             TO AAA IN BGROUP
+           .
+`;
+		await assertFormatProcedureChangesContentAsync(initial, exp);
+	});
+
 	test('for a move with many in params that would wind up beyond margin 2 - do more idents', async function () {
 		const initial = `
        MYHEADER |SECTION.

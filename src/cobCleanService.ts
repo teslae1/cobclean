@@ -153,10 +153,10 @@ function doMoveIdent(formattedLines: string[]) : string[] {
         let largestLenOfArg = 1;
         for(let j = 0; j < group.length;j++){
             const statement = group[j];
-            if(statement.moveArg.value.length > largestLenOfArg){
+            if(statement.moveArg.value.length > largestLenOfArg && statement.moveInArgs.length > 0){
                 largestLenOfArg = statement.moveArg.value.length;
             }
-            if(statement.toArg.value.length > largestLenOfArg){
+            if(statement.toArg.value.length > largestLenOfArg && statement.toInArgs.length > 0){
                 largestLenOfArg = statement.toArg.value.length;
             }
             if(j === group.length - 1){
@@ -207,12 +207,13 @@ function extractMoveGroups(formattedLines: string[]) : MoveToStatement[][] {
     let currentlyParsingMoveGroup = false;
     for(let i = 0; i < formattedLines.length;i++){
         const line = formattedLines[i];
-        if (isComment(line)) { continue; }
         if (!line.trim().startsWith(MOVE_KEYWORD)) {
             currentlyParsingMoveGroup = false;
             continue;
         }
+        //if current line is comment - add as prefix comment lines
         
+        // send prefix comment line sto extractMoveStatement
         const moveStatement = extractMoveStatement(formattedLines, i);
         if(!moveStatement){
             continue;
@@ -261,7 +262,10 @@ function extractMoveStatement(formattedLines: string[], indexOfFoundMove: number
     let lastWord = "";
     for(let i = indexOfFoundMove;i < formattedLines.length && state !== MoveStatementParsingState.Done;i++){
         const line = formattedLines[i];
-        if (isComment(line)) { continue; }
+        if (isComment(line)) {
+            //add based on state - add to end if state targets array of things
+            addCommentToStatement(statement, state, line);
+        }
         const words = line.trim().split(" ");
         for(let j = 0; j < words.length && state !== MoveStatementParsingState.Done;j++){
             if(words[j].trim().length == 0){ continue; }
