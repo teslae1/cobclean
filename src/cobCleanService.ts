@@ -108,12 +108,12 @@ function indentProcedureSourceLine(sourceLine: string): string {
     }
     let firstNonWhitespaceCharIndex = -1;
     for(let i = 0; i < sourceLine.length;i++){
-        if(sourceLine[i] != " "){ 
+        if(sourceLine[i] !== " "){ 
             firstNonWhitespaceCharIndex = i;
             break;
         }
     }
-    if(firstNonWhitespaceCharIndex == -1){
+    if(firstNonWhitespaceCharIndex === -1){
         return sourceLine;
     }
     if (firstNonWhitespaceCharIndex > 11) { // when already indented like if contents - dont change it
@@ -276,7 +276,7 @@ function extractMoveStatement(formattedLines: string[], indexOfFoundMove: number
         }
         const words = line.trim().split(" ");
         for(let j = 0; j < words.length && state !== MoveStatementParsingState.Done;j++){
-            if(words[j].trim().length == 0){ continue; }
+            if(words[j].trim().length === 0){ continue; }
             switch(state){
                 case MoveStatementParsingState.LocatingMoveArg:
                     if (lastWord === MOVE_KEYWORD) {
@@ -390,7 +390,7 @@ function createMoveLine(keyword: string,
     inArgs: LineItem[], 
     targetIndexOfIn: number,
     doSeperateLineForIn: boolean): string {
-    const keywordIncludingSpaces = keyword == MOVE_KEYWORD ? keyword : "  " + keyword;
+    const keywordIncludingSpaces = keyword === MOVE_KEYWORD ? keyword : "  " + keyword;
     let moveLine = AMOUNT_SPACES_FOR_MARGIN_2 + keywordIncludingSpaces + " " + arg;
     if (inArgs.length > 0 && !doSeperateLineForIn) {
         while (moveLine.length < targetIndexOfIn) {

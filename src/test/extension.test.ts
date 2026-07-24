@@ -7,6 +7,24 @@ suite('Format Procedure test suite', () => {
 
 	vscode.window.showInformationMessage('Start all tests.');
 
+	test('handles linebreak intertwined with move statement', async function () {
+
+		const initial = `
+       MYHEADER |SECTION.
+           MOVE A IN AGROUP 
+
+             TO B IN BGROUP
+           .
+`;
+		const exp = `
+       MYHEADER SECTION.
+           MOVE A IN AGROUP
+             TO B IN BGROUP
+           .
+`;
+		await assertFormatProcedureChangesContentAsync(initial, exp);
+	});
+
 	test('dont break margin2 already idented', async function () {
 
 		const initial = `
@@ -274,6 +292,50 @@ suite('Format Procedure test suite', () => {
        MYHEADER SECTION.
            MOVE A
              TO A
+           .
+`;
+		await assertFormatProcedureChangesContentAsync(initial, exp);
+	});
+
+	test('for movegroup new long move statement reindents everything', async function () {
+		const initial = `
+       MYHEADER |SECTION.
+           MOVE A  IN AGROUP 
+             TO A  IN BGROUP
+           MOVE AA IN AGROUP 
+             TO AA IN BGROUP
+           MOVE AAA IN AGROUP TO AAA IN BGROUP
+           .
+`;
+		const exp = `
+       MYHEADER SECTION.
+           MOVE A   IN AGROUP
+             TO A   IN BGROUP
+           MOVE AA  IN AGROUP
+             TO AA  IN BGROUP
+           MOVE AAA IN AGROUP
+             TO AAA IN BGROUP
+           .
+`;
+		await assertFormatProcedureChangesContentAsync(initial, exp);
+	});
+
+	test('for movegroup creates indents when none', async function () {
+		const initial = `
+       MYHEADER |SECTION.
+           MOVE A IN AGROUP TO A IN BGROUP
+           MOVE AA IN AGROUP TO AA IN BGROUP
+           MOVE AAA IN AGROUP TO AAA IN BGROUP
+           .
+`;
+		const exp = `
+       MYHEADER SECTION.
+           MOVE A   IN AGROUP
+             TO A   IN BGROUP
+           MOVE AA  IN AGROUP
+             TO AA  IN BGROUP
+           MOVE AAA IN AGROUP
+             TO AAA IN BGROUP
            .
 `;
 		await assertFormatProcedureChangesContentAsync(initial, exp);

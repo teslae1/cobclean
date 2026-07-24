@@ -10,7 +10,7 @@ npm test
 - [X] support auto uppercasing
   - [X] support not uppercasing string constants
 - [x] test to ensure the format only is paragraph wise
-- [-] support auto align
+- [x] support auto align
   - [X] for comments - should start with * at col 8
   - [X] for the header (first line) - should start at 9
   - [X] for contents lets go with col 11 align for now
@@ -27,73 +27,35 @@ npm test
   - [x] fix bug this creates a weird ident
                 move '123' to x in agroup 
 
-** HAIL THE MACHINE GOD **
-all tests are passing - review the changes and commit
-
   - [x] fix bug: preserving all intertwined comments
     - consider just doing general way of no seperation and preserve any intertwined comments
-  - [ ] ensure it has proper stop for move groups
-  - [ ] for anything move without general structure at top - follow standard structure
-		const init = `
-       MYHEADER |SECTION.
-           MOVE A IN AGROUP TO A IN BGROUP
-           MOVE AA IN AGROUP TO AA IN BGROUP
-           MOVE AAA IN AGROUP TO AAA IN BGROUP
-           .
-		`;
-		const exp = `
-       MYHEADER SECTION.
-           MOVE A   IN AGROUP 
-             TO A   IN BGROUP
-           MOVE AA  IN AGROUP 
-             TO AA  IN BGROUP
-           MOVE AAA IN AGROUP 
-             TO AAA IN BGROUP
-           .
-		`;
-  - [ ] for last move need formatting reformats everything
-		const init = `
-       MYHEADER |SECTION.
-           MOVE A  IN AGROUP 
-             TO A  IN BGROUP
-           MOVE AA IN AGROUP 
-             TO AA IN BGROUP
-           MOVE AAA IN AGROUP TO AAA IN BGROUP
-           .
-		`;
-		const exp = `
-       MYHEADER SECTION.
-           MOVE A   IN AGROUP 
-             TO A   IN BGROUP
-           MOVE AA  IN AGROUP 
-             TO AA  IN BGROUP
-           MOVE AAA IN AGROUP 
-             TO AAA IN BGROUP
-           .
-		`;
-  - [ ] for two seperate move sections keep indentation group wise
-  - [ ] test that if move formatting on more indent crosses the right hand border 
+  - [x] for anything move without general structure at top - follow standard structure
+  - [x] for last move need formatting reformats everything
+  - [x] for two seperate move sections keep indentation group wise
+  - [x] test that if move formatting on more indent crosses the right hand border 
         - if so we want to break the line somewhere for all in that move group
-  - [ ] support same kind of formatting from video
-- [ ] formatter able to align everything to do with paragraph 
-- [ ] support multiple move targets in formatting
-  - [ ] remember to still preserve intertwined comments when also supporting multi move targets
-- [ ] remove dupliation from createGroupFormattedLines
-- [ ] test if we can handle line break between targets
-- [ ] consider method extractor function
+  - [x] support same kind of formatting from video
+- [x] formatter able to align everything to do with paragraph 
+- [x] support multiple move targets in formatting
+  - [x] remember to still preserve intertwined comments when also supporting multi move targets
+  - [x] ensure it has proper stop for move groups
+- [x] remove dupliation from createGroupFormattedLines
+- [x] test if we can handle line break between targets
 - [ ] consider auto comment function
+  - auto uppercase also
+- [ ] do pretty readme and consider gif example
+- [ ] do first actual version release
+- [ ] try and see if possible to override = thing
+- [ ] consider method extractor function
 - [ ] consider better implementation of log error
-- [ ] support unit test formatter
+- [ ] support cobol-check source formatter
+  - [ ] auto uppercase
+  - [ ] auto align comment
+  - [ ] auto align anything to the left of the thing
+  - [ ] consider support group indent
 - [X] keep mouse at expected line
 - [ ] support a good way of detecting end when not another procedure like a copybook
-- [ ] figure out why the test output swaps actual and expected and outputs two things
 - [ ] consider format all procedures
 - [ ] once adding more features consider renaming test suite to be only procedure scoped
-- [ ] add test to assert that scope is only current procedure
-- [ ] do pretty readme and consider gif example
 - [ ] do better error msg
-- [ ] formatter also working on testcases
 - [ ] reach first draft publish
-- [ ] future features:
-  - [ ] full formatter that can be invoked on the thing
-  - [ ] convert current selection to comments
