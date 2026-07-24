@@ -3,9 +3,28 @@ import * as vscode from 'vscode';
 
 const cursorChar = '|';
 
-suite('Extension Test Suite', () => {
+suite('Format Procedure test suite', () => {
 
 	vscode.window.showInformationMessage('Start all tests.');
+
+	test('dont break margin2 already idented', async function () {
+
+		const initial = `
+       MYHEADER |SECTION.
+           IF BOOL
+             DISPLAY 'DONT MOVE THIS LINE'
+           END-IF
+           .
+`;
+		const exp = `
+       MYHEADER SECTION.
+           IF BOOL
+             DISPLAY 'DONT MOVE THIS LINE'
+           END-IF
+           .
+`;
+		await assertFormatProcedureChangesContentAsync(initial, exp);
+	});
 
 
 	test('support intertwined comment between move being preserved', async function () {
@@ -13,15 +32,15 @@ suite('Extension Test Suite', () => {
 		const initial = `
        MYHEADER |SECTION.
            MOVE '123' IN BGROUP
-         * COMMENT
-             TO X     IN AGROUP
+      * SOME COMMENT
+           TO X     IN AGROUP
            .
 `;
 		const exp = `
        MYHEADER SECTION.
            MOVE '123' IN BGROUP
-         * COMMENT
-             TO X     IN AGROUP
+      * SOME COMMENT
+           TO X     IN AGROUP
            .
 `;
 		await assertFormatProcedureChangesContentAsync(initial, exp);
@@ -303,7 +322,7 @@ suite('Extension Test Suite', () => {
 		const initial = `
        MYHEADER SECTION.
       COMPUTE X = A * B * |C
-               DISPLAY X.
+           DISPLAY X.
 `;
 		const exp = `
        MYHEADER SECTION.

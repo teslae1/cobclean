@@ -106,6 +106,19 @@ function indentProcedureSourceLine(sourceLine: string): string {
     if(isComment(sourceLine)){
         return indentComment(sourceLine);
     }
+    let firstNonWhitespaceCharIndex = -1;
+    for(let i = 0; i < sourceLine.length;i++){
+        if(sourceLine[i] != " "){ 
+            firstNonWhitespaceCharIndex = i;
+            break;
+        }
+    }
+    if(firstNonWhitespaceCharIndex == -1){
+        return sourceLine;
+    }
+    if (firstNonWhitespaceCharIndex > 11) { // when already indented like if contents - dont change it
+        return sourceLine; 
+    }
     return moveStartOfNonWhitespaceToIndex(sourceLine, 11);
 }
 
@@ -156,7 +169,7 @@ function doMoveIdent(formattedLines: string[]) : string[] {
             if(statement.moveArg.value.length > largestLenOfArg && statement.moveInArgs.length > 0){
                 largestLenOfArg = statement.moveArg.value.length;
             }
-            if(statement.toArg.value.length > largestLenOfArg && statement.toInArgs.length > 0){
+            if(statement.toArg && statement.toArg.value.length > largestLenOfArg && statement.toInArgs.length > 0){
                 largestLenOfArg = statement.toArg.value.length;
             }
             if(j === group.length - 1){
@@ -211,9 +224,6 @@ function extractMoveGroups(formattedLines: string[]) : MoveToStatement[][] {
             currentlyParsingMoveGroup = false;
             continue;
         }
-        //if current line is comment - add as prefix comment lines
-        
-        // send prefix comment line sto extractMoveStatement
         const moveStatement = extractMoveStatement(formattedLines, i);
         if(!moveStatement){
             continue;
@@ -236,7 +246,7 @@ function extractMoveGroups(formattedLines: string[]) : MoveToStatement[][] {
 interface MoveToStatement{
     moveArg: LineItem,
     moveInArgs: LineItem[],
-    toArg: LineItem,
+    toArg?: LineItem,
     toInArgs: LineItem[],
 }
 
@@ -254,17 +264,15 @@ enum MoveStatementParsingState {
 }
 
 function extractMoveStatement(formattedLines: string[], indexOfFoundMove: number) : MoveToStatement | undefined {
-    let moveArg : LineItem | undefined = undefined;
-    let toArg : LineItem | undefined = undefined;
-    let moveInArgs : LineItem[] = [];
-    let toInArgs : LineItem[] = [];
+    const statement: MoveToStatement = { moveInArgs: [], toInArgs: [], moveArg: { value: "", lineIndex: -1 } };
+
     let state = MoveStatementParsingState.LocatingMoveArg;
     let lastWord = "";
+    let didSetMoveArg = false;
     for(let i = indexOfFoundMove;i < formattedLines.length && state !== MoveStatementParsingState.Done;i++){
         const line = formattedLines[i];
         if (isComment(line)) {
-            //add based on state - add to end if state targets array of things
-            addCommentToStatement(statement, state, line);
+            break;
         }
         const words = line.trim().split(" ");
         for(let j = 0; j < words.length && state !== MoveStatementParsingState.Done;j++){
@@ -272,13 +280,14 @@ function extractMoveStatement(formattedLines: string[], indexOfFoundMove: number
             switch(state){
                 case MoveStatementParsingState.LocatingMoveArg:
                     if (lastWord === MOVE_KEYWORD) {
-                        moveArg = { value: words[j], lineIndex: i };
+                        statement.moveArg = { value: words[j], lineIndex: i };
+                        didSetMoveArg = true;
                         state = MoveStatementParsingState.LocatingMoveInStatements;
                     }
                     break;
                 case MoveStatementParsingState.LocatingMoveInStatements:
                     if (lastWord === IN_KEYWORD) {
-                        moveInArgs.push({ value: words[j], lineIndex: i });
+                        statement.moveInArgs.push({ value: words[j], lineIndex: i });
                     }
                     if (words[j] === TO_KEYWORD) {
                         state = MoveStatementParsingState.LocatingToArg;
@@ -286,13 +295,13 @@ function extractMoveStatement(formattedLines: string[], indexOfFoundMove: number
                     break;
                 case MoveStatementParsingState.LocatingToArg:
                     if(lastWord === TO_KEYWORD){
-                        toArg = {value: words[j], lineIndex: i};
+                        statement.toArg = {value: words[j], lineIndex: i};
                         state = MoveStatementParsingState.LocatingToInStatements;
                     }
                     break;
                 case MoveStatementParsingState.LocatingToInStatements:
                     if(lastWord === IN_KEYWORD){
-                        toInArgs.push({ value: words[j], lineIndex: i });
+                        statement.toInArgs.push({ value: words[j], lineIndex: i });
                     }
                     else if(words[j] === IN_KEYWORD){
                         //skip to next word
@@ -306,19 +315,11 @@ function extractMoveStatement(formattedLines: string[], indexOfFoundMove: number
             lastWord = words[j];
         }
     }
+    if(!didSetMoveArg){
+        return undefined;
+    }
 
-    if(!moveArg){
-        return;
-    }
-    if(!toArg){
-        return;
-    }
-    return {
-        moveArg: moveArg,
-        moveInArgs: moveInArgs, 
-        toArg: toArg, 
-        toInArgs: toInArgs
-    };
+    return statement;
 }
 
 interface SourceSection{
@@ -373,8 +374,14 @@ function getLastLineIndexOfStatement(statement: any) : number{
     if(statement.toInArgs.length > 0){
         return statement.toInArgs[statement.toInArgs.length - 1].lineIndex;
     }
-    else{
+    else if(statement.toArg){
         return statement.toArg.lineIndex;
+    }
+    else if(statement.moveInArgs.length > 0){
+        return statement.moveInArgs[statement.moveInArgs.length - 1].lineIndex;
+    }
+    else{
+        return statement.moveArg.lineIndex;
     }
 }
 
@@ -412,12 +419,14 @@ function createGroupFormattedLinesWithIdentSettings(group: MoveToStatement[],
             targetIndexOfIn, 
             doSeperateLineForIn);
         groupFormattedLines.push(moveLine);
-        const toLine = createMoveLine(TO_KEYWORD, 
-            statement.toArg.value, 
-            statement.toInArgs, 
-            targetIndexOfIn, 
-            doSeperateLineForIn);
-        groupFormattedLines.push(toLine);
+        if(statement.toArg){ // This will not be present in cases where the statement parser stopped early because of comment
+            const toLine = createMoveLine(TO_KEYWORD,
+                statement.toArg.value,
+                statement.toInArgs,
+                targetIndexOfIn,
+                doSeperateLineForIn);
+            groupFormattedLines.push(toLine);
+        }
     }
     return groupFormattedLines;
 }

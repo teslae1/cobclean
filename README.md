@@ -26,7 +26,11 @@ npm test
   - [x] a statement between two move groups should act as seperate groups
   - [x] fix bug this creates a weird ident
                 move '123' to x in agroup 
-  - [ ] fix bug: preserving all intertwined comments
+
+** HAIL THE MACHINE GOD **
+all tests are passing - review the changes and commit
+
+  - [x] fix bug: preserving all intertwined comments
     - consider just doing general way of no seperation and preserve any intertwined comments
   - [ ] ensure it has proper stop for move groups
   - [ ] for anything move without general structure at top - follow standard structure
@@ -75,6 +79,7 @@ npm test
 - [ ] support multiple move targets in formatting
   - [ ] remember to still preserve intertwined comments when also supporting multi move targets
 - [ ] remove dupliation from createGroupFormattedLines
+- [ ] test if we can handle line break between targets
 - [ ] consider method extractor function
 - [ ] consider auto comment function
 - [ ] consider better implementation of log error
@@ -86,6 +91,7 @@ npm test
 - [ ] once adding more features consider renaming test suite to be only procedure scoped
 - [ ] add test to assert that scope is only current procedure
 - [ ] do pretty readme and consider gif example
+- [ ] do better error msg
 - [ ] formatter also working on testcases
 - [ ] reach first draft publish
 - [ ] future features:
