@@ -1,11 +1,50 @@
-import * as assert from 'assert';
 import * as vscode from 'vscode';
+import { assertFormatProcedureChangesContentAsync } from './testHelpers'
 
-const cursorChar = '|';
+const commandName = 'cobclean.formatProcedure';
 
 suite('Format Procedure test suite', () => {
 
 	vscode.window.showInformationMessage('Start all tests.');
+
+  test('only formats selection if selection exists', async function () {
+		const initial = `
+       MYHEADER SECTION.
+
+           COMPUTE A = A * B * C
+           MOVE BB IN AGROUP
+             TO BBBB IN BGROUP
+
+|           MOVE A    IN AGROUP
+             TO A IN BGROUP
+           MOVE AA    IN AGROUP
+             TO AA  IN BGROUP|
+
+           COMPUTE A = A * B * C
+           MOVE BB IN AGROUP
+             TO BBBB IN BGROUP
+           .
+`;
+		const exp = `
+       MYHEADER SECTION.
+
+           COMPUTE A = A * B * C
+           MOVE BB IN AGROUP
+             TO BBBB IN BGROUP
+
+           MOVE A  IN AGROUP
+             TO A  IN BGROUP
+           MOVE AA IN AGROUP
+             TO AA IN BGROUP
+
+           COMPUTE A = A * B * C
+           MOVE BB IN AGROUP
+             TO BBBB IN BGROUP
+           .
+`;
+
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
+  });
 
 	test('handles linebreak intertwined with move statement', async function () {
 
@@ -22,7 +61,7 @@ suite('Format Procedure test suite', () => {
              TO B IN BGROUP
            .
 `;
-		await assertFormatProcedureChangesContentAsync(initial, exp);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 	});
 
 	test('dont break margin2 already idented', async function () {
@@ -41,7 +80,7 @@ suite('Format Procedure test suite', () => {
            END-IF
            .
 `;
-		await assertFormatProcedureChangesContentAsync(initial, exp);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 	});
 
 
@@ -61,7 +100,7 @@ suite('Format Procedure test suite', () => {
            TO X     IN AGROUP
            .
 `;
-		await assertFormatProcedureChangesContentAsync(initial, exp);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 	});
 
 	test('no indent when no in args for move arg', async function () {
@@ -77,7 +116,7 @@ suite('Format Procedure test suite', () => {
              TO X IN AGROUP
            .
 `;
-		await assertFormatProcedureChangesContentAsync(initial, exp);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 	});
 
 	test('a statement between two move groups should act as seperate groups', async function () {
@@ -104,7 +143,7 @@ suite('Format Procedure test suite', () => {
              TO BBBB IN BGROUP
            .
 `;
-		await assertFormatProcedureChangesContentAsync(initial, exp);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 	});
 
 	test('formatting move group keeps intertwined comments', async function () {
@@ -131,7 +170,7 @@ suite('Format Procedure test suite', () => {
              TO AAA IN BGROUP
            .
 `;
-		await assertFormatProcedureChangesContentAsync(initial, exp);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 	});
 
 	test('for a move with many in params that would wind up beyond margin 2 - do more idents', async function () {
@@ -155,7 +194,7 @@ suite('Format Procedure test suite', () => {
                 IN BGROUP
            .
 `;
-		await assertFormatProcedureChangesContentAsync(initial, exp);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 	});
 
 	test('for a move that would wind up beyond margin 2 - do more idents', async function () {
@@ -179,7 +218,7 @@ suite('Format Procedure test suite', () => {
                 IN BGROUP
            .
 `;
-		await assertFormatProcedureChangesContentAsync(initial, exp);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 	});
 
 	test('move align that decreases line count handles multigroup', async function () {
@@ -213,7 +252,7 @@ suite('Format Procedure test suite', () => {
              TO AAAA IN BGROUP
            .
 `;
-		await assertFormatProcedureChangesContentAsync(initial, exp);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 	});
 
 	test('move align that increases line count handles multigroup', async function () {
@@ -239,7 +278,7 @@ suite('Format Procedure test suite', () => {
              TO AAAA IN BGROUP
            .
 `;
-		await assertFormatProcedureChangesContentAsync(initial, exp);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 	});
 
 	test('move align indents handles partial no IN', async function () {
@@ -263,7 +302,7 @@ suite('Format Procedure test suite', () => {
              TO AAA IN BGROUP
            .
 `;
-		await assertFormatProcedureChangesContentAsync(initial, exp);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 	});
 
 	test('move align indents handles no IN inline', async function () {
@@ -278,7 +317,7 @@ suite('Format Procedure test suite', () => {
              TO A
            .
 `;
-		await assertFormatProcedureChangesContentAsync(initial, exp);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 	});
 
 	test('move align indents handles no IN', async function () {
@@ -294,7 +333,7 @@ suite('Format Procedure test suite', () => {
              TO A
            .
 `;
-		await assertFormatProcedureChangesContentAsync(initial, exp);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 	});
 
 	test('for movegroup new long move statement reindents everything', async function () {
@@ -317,7 +356,7 @@ suite('Format Procedure test suite', () => {
              TO AAA IN BGROUP
            .
 `;
-		await assertFormatProcedureChangesContentAsync(initial, exp);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 	});
 
 	test('for movegroup creates indents when none', async function () {
@@ -338,7 +377,7 @@ suite('Format Procedure test suite', () => {
              TO AAA IN BGROUP
            .
 `;
-		await assertFormatProcedureChangesContentAsync(initial, exp);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 	});
 
 	test('move align indents', async function () {
@@ -362,7 +401,7 @@ suite('Format Procedure test suite', () => {
              TO AAA IN BGROUP
            .
 `;
-		await assertFormatProcedureChangesContentAsync(initial, exp);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 	});
 
 	test('move statements is seperated into two lines', async function () {
@@ -377,7 +416,7 @@ suite('Format Procedure test suite', () => {
              TO A IN BGROUP
            .
 `;
-		await assertFormatProcedureChangesContentAsync(initial, exp);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 	});
 
 	test('auto align method contents', async function () {
@@ -391,7 +430,7 @@ suite('Format Procedure test suite', () => {
            COMPUTE X = A * B * C
            DISPLAY X.
 `;
-		await assertFormatProcedureChangesContentAsync(initial, exp);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 	});
 
 	test('auto align header backward', async function () {
@@ -405,7 +444,7 @@ suite('Format Procedure test suite', () => {
            COMPUTE X = A * B * C
            DISPLAY X.
 `;
-		await assertFormatProcedureChangesContentAsync(initial, exp);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 
 	});
 
@@ -420,7 +459,7 @@ suite('Format Procedure test suite', () => {
            COMPUTE X = A * B * C
            DISPLAY X.
 `;
-		await assertFormatProcedureChangesContentAsync(initial, exp);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 
 	});
 
@@ -442,7 +481,7 @@ suite('Format Procedure test suite', () => {
            DISPLAY X.
 `;
 
-		await assertFormatProcedureChangesContentAsync(initial, exp);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 
 	});
 
@@ -474,7 +513,7 @@ suite('Format Procedure test suite', () => {
            display x.
     `;
 
-	await assertFormatProcedureChangesContentAsync(initial, exp);
+	await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 	});
 	
 
@@ -495,56 +534,7 @@ suite('Format Procedure test suite', () => {
 `;
 
 		this.timeout(10000);
-		await assertFormatProcedureChangesContentAsync(initial, exp);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
 	});
-
-	async function assertFormatProcedureChangesContentAsync(initialContentIncludingCursorPosition: string,
-		expContentAfterFormatting: string) {
-		const position = getCurrentCursorPosition(initialContentIncludingCursorPosition);
-		if (!position) {
-			assert.fail("current cursor position could not be found in initial content of test");
-		}
-		const initialContent = removeChar(initialContentIncludingCursorPosition, cursorChar);
-		const doc = await vscode.workspace.openTextDocument({
-			content: initialContent
-		});
-		const editor = await vscode.window.showTextDocument(doc);
-		editor.selection = new vscode.Selection(position, position);
-		//await wait(10000);
-		await vscode.commands.executeCommand('cobclean.formatProcedure');
-		const actText = editor.document.getText();
-		assert.strictEqual(actText, expContentAfterFormatting);
-	}
-
-	function getCurrentCursorPosition(initialContentIncludingCursorPosition: string): vscode.Position | undefined {
-		let lineNr = 0;
-		let charPos = 0;
-		for(let i = 0; i < initialContentIncludingCursorPosition.length;i++){
-			if(initialContentIncludingCursorPosition[i] === '\n'){
-				lineNr++;
-				charPos = 0;
-			} 
-			else if(initialContentIncludingCursorPosition[i] === cursorChar){
-				return new vscode.Position(lineNr,charPos);
-			}
-			else{
-				charPos++;
-			}
-		}
-		return undefined;
-	}
 });
-function removeChar(str: string, char: string) : string {
-	let result = "";
-	for(let i = 0; i < str.length;i++){
-		if(str[i] == char){
-			continue;
-		}
-		result += str[i];
-	}
-	return result;
-}
-function wait(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 

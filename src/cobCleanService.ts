@@ -10,16 +10,53 @@ const MARGIN2_MAX_LINE_LEN = 72;
 
 
 export class CobCleanService {
+    async toggleCommentAsync(): Promise<void> {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) { return; }
+        const selection = editor.selection;
+        if (selection.isEmpty) { return; }
+        const src = editor.document.getText(selection);
+        const srcLines = src.split('\n');
+        if (srcLines.length < 1) { return; }
+
+        let linesWithToggledComment = "";
+        for (let i = 0; i < srcLines.length; i++) {
+            if (srcLines[i].trim().length === 0) {
+                linesWithToggledComment += srcLines[i];
+            }
+            if (isComment(srcLines[i])) {
+                linesWithToggledComment += uncommentLine(srcLines[i]);
+            }
+            else {
+                linesWithToggledComment += commentLine(srcLines[i]);
+            }
+            if(i < srcLines.length - 1){
+                linesWithToggledComment += "\n";
+            }
+        }
+
+        await replaceSourceAtRangeAsync(editor, selection, linesWithToggledComment);
+    }
 	async formatProcedureAsync() : Promise<void> {
         const editor = vscode.window.activeTextEditor;
         if (!editor) { return; }
         const sourceStr = editor.document.getText();
         if (!sourceStr) { return; }
         const sourceLines = sourceStr.split('\n');
-        const procedureHeaderStartLine = getProcedureHeaderStartLine(editor, sourceLines);
-        if(!procedureHeaderStartLine){ return; }
-        await formatProcedureFromHeaderUntilNextHeaderOrEndAsync(procedureHeaderStartLine, sourceLines, editor);
+        await formatProcedureAsync(sourceLines, editor);
 	}
+}
+
+function commentLine(srcLine: string) : string {
+    if(srcLine[6] !== " "){
+        //add spaces so contents is on right hand side of comment char
+        srcLine = moveStartOfNonWhitespaceToIndex(srcLine, 7);
+    }
+    return srcLine.substring(0,6) + commentChar + srcLine.substring(6);
+}
+
+function uncommentLine(srcLine: string) : string {
+    return srcLine.substring(0,6) + srcLine.substring(7);
 }
 
 function getProcedureHeaderStartLine(editor: vscode.TextEditor, sourceLines: string[]) : number | undefined{
@@ -56,24 +93,21 @@ function isComment(sourceLine: string) {
     return sourceLine.trimStart().startsWith(commentChar);
 }
 
-async function formatProcedureFromHeaderUntilNextHeaderOrEndAsync(
-    procedureHeaderStartLineIndex: number,
-    sourceLines: string[], editor: vscode.TextEditor): Promise<void> {
-
-    const sourceSection = getSourceOfprocedureToFormat(procedureHeaderStartLineIndex, sourceLines);
+async function formatProcedureAsync(sourceLines: string[], editor: vscode.TextEditor): Promise<void> {
+    const sourceSection = getSourceOfprocedureToFormat(sourceLines, editor);
+    if(!sourceSection){
+        logError("sourceSection was undefined");
+        return;
+    }
     let formattedLines = sourceSection.sourceLines;
 
     formattedLines = doUppercasing(formattedLines);
     formattedLines = doBasicIndent(formattedLines);
     formattedLines = doMoveIdent(formattedLines);
 
-    const newSource = createNewSourceStrFromLines(formattedLines, sourceSection.procedureEndLineIndex, sourceLines);
-    const startPosition = new vscode.Position(procedureHeaderStartLineIndex, 0);
-    const endPosition = new vscode.Position(sourceSection.procedureEndLineIndex, 0);
-    const range = new vscode.Range(startPosition, endPosition);
-    await editor.edit(editBuilder => {
-        editBuilder.replace(range, newSource);
-    });
+    const newSource = createNewSourceStrFromLines(formattedLines, sourceSection.endPosition.line, sourceLines);
+    const range = new vscode.Range(sourceSection.startPosition, sourceSection.endPosition);
+    await replaceSourceAtRangeAsync(editor, range, newSource);
 }
 
 function toUpperCaseExcludingStringLiterals(sourceLine: string): string {
@@ -323,23 +357,19 @@ function extractMoveStatement(formattedLines: string[], indexOfFoundMove: number
 }
 
 interface SourceSection{
-    procedureEndLineIndex: number,
+    startPosition: vscode.Position,
+    endPosition: vscode.Position,
     sourceLines: string[]
 }
 
-function getSourceOfprocedureToFormat(procedureHeaderStartLineIndex: number, sourceLines: string[]) : SourceSection {
-    let linesToFormat : string[] = [];
-    let procedureEndLineIndex = sourceLines.length;
-    for(let i = procedureHeaderStartLineIndex; i < sourceLines.length;i++){
-        if (i > procedureHeaderStartLineIndex && isProcedureHeader(sourceLines[i])) {
-            procedureEndLineIndex = i;
-            break;
-        }
-        else{
-            linesToFormat.push(sourceLines[i]);
-        }
+function getSourceOfprocedureToFormat(sourceLines: string[], 
+    editor: vscode.TextEditor) : SourceSection | undefined {
+    if(editor.selection.isEmpty){
+        return getSourceForEntireProcedure(editor, sourceLines);
     }
-    return { procedureEndLineIndex: procedureEndLineIndex, sourceLines: linesToFormat };
+    else{
+        return GetSourceFromSelection(editor);
+    }
 }
 
 function createGroupFormattedLines(group: MoveToStatement[], targetIndexOfIn: number): string[] {
@@ -429,5 +459,51 @@ function createGroupFormattedLinesWithIdentSettings(group: MoveToStatement[],
         }
     }
     return groupFormattedLines;
+}
+
+async function replaceSourceAtRangeAsync(editor: vscode.TextEditor, range: vscode.Range, newSource: string) : Promise<void> {
+    await editor.edit(editBuilder => {
+        editBuilder.replace(range, newSource);
+    });
+}
+
+function getSourceForEntireProcedure(editor: vscode.TextEditor, sourceLines: string[]): SourceSection | undefined {
+
+    const procedureHeaderStartLineIndex = getProcedureHeaderStartLine(editor, sourceLines);
+    if (!procedureHeaderStartLineIndex) {
+        logError("did not find any procedureHeaderStartLineIndex");
+        return undefined;
+    }
+    let linesToFormat: string[] = [];
+    let procedureEndLineIndex = sourceLines.length;
+    for (let i = procedureHeaderStartLineIndex; i < sourceLines.length; i++) {
+        if (i > procedureHeaderStartLineIndex && isProcedureHeader(sourceLines[i])) {
+            procedureEndLineIndex = i;
+            break;
+        }
+        else {
+            linesToFormat.push(sourceLines[i]);
+        }
+    }
+    return {
+        sourceLines: linesToFormat,
+        startPosition: new vscode.Position(procedureHeaderStartLineIndex, 0),
+        endPosition: new vscode.Position(procedureEndLineIndex, 0)
+    }
+}
+
+function GetSourceFromSelection(editor: vscode.TextEditor): SourceSection {
+    const selection = editor.selection;
+    const src = editor.document.getText(selection);
+    const srcLines = src.split('\n');
+    return {
+        sourceLines: srcLines,
+        startPosition: selection.start,
+        endPosition: selection.end
+    }
+}
+
+function logError(msg: string) {
+    console.log(msg);
 }
 

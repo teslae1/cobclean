@@ -1,0 +1,67 @@
+
+- [x] get basic running
+- [x] get test suite running
+npm test
+- [x] setup task to do it
+- [x] setup simple test framework 
+- [x] setup git
+- [X] support auto uppercasing
+  - [X] support not uppercasing string constants
+- [x] test to ensure the format only is paragraph wise
+- [x] support auto align
+  - [X] for comments - should start with * at col 8
+  - [X] for the header (first line) - should start at 9
+  - [X] for contents lets go with col 11 align for now
+  - [X] for move inline to - seperate to two lines
+  - [x] move align indents
+    - [X] rewrite to do the linebreak and the other thing based on parsed output
+    - [X] remember to handle no in param things
+    - [X] remember to test for offset of multiple groups where line amount changes
+    - [X] cleanup unused stuff
+    - [x] fix todos in code
+  - [x] for anything that is beyond border we need to make it pretty
+  - [x] ensure no bug where comment is removed when within a move group
+  - [x] a statement between two move groups should act as seperate groups
+  - [x] fix bug this creates a weird ident
+                move '123' to x in agroup 
+
+  - [x] fix bug: preserving all intertwined comments
+    - consider just doing general way of no seperation and preserve any intertwined comments
+  - [x] for anything move without general structure at top - follow standard structure
+  - [x] for last move need formatting reformats everything
+  - [x] for two seperate move sections keep indentation group wise
+  - [x] test that if move formatting on more indent crosses the right hand border 
+        - if so we want to break the line somewhere for all in that move group
+  - [x] support same kind of formatting from video
+- [x] formatter able to align everything to do with paragraph 
+- [x] support multiple move targets in formatting
+  - [x] remember to still preserve intertwined comments when also supporting multi move targets
+  - [x] ensure it has proper stop for move groups
+- [x] remove dupliation from createGroupFormattedLines
+- [x] test if we can handle line break between targets
+- [x] do release
+- [x] auto comment function
+  - auto uppercase also
+  - [x] only run on selected lines ofc
+  - [x] support selection cursor for test framework
+  - [x] also support uncomment thing
+- [ ] do selection scoped formatting
+- [ ] consider supporting format selection where the header of a procedure is included?
+- [ ] document all commands in readme
+- [ ] do pretty readme and consider gif example
+  - [ ] move todo to seperate
+- [ ] do first actual version release
+- [ ] try and see if possible to override = thing
+- [ ] consider method extractor function
+- [ ] consider better implementation of log error
+- [ ] support cobol-check source formatter
+  - [ ] auto uppercase
+  - [ ] auto align comment
+  - [ ] auto align anything to the left of the thing
+  - [ ] consider support group indent
+- [X] keep mouse at expected line
+- [ ] support a good way of detecting end when not another procedure like a copybook
+- [ ] consider format all procedures
+- [ ] once adding more features consider renaming test suite to be only procedure scoped
+- [ ] do better error msg
+- [ ] reach first draft publish
