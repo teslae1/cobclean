@@ -1,8 +1,11 @@
-# cobclean README
+# cobclean 
 
-Formatters for cobol source.  
+Formatters for cobol source code.  
  
 Exposes the command "cobclean.formatProcedure":
+
+![](media/formatProcedure.gif)
+
 - Formats the contents of the current procedure/paragraph
   - Current procedure is identified by current cursor position
   - Only changes the contents of the current procedure 
