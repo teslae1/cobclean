@@ -3,6 +3,9 @@
   "displayName": "cobclean",
   "publisher": "KarlMogensen",
   "description": "cobol formatter",
+  "repository": {
+    "url": "https://github.com/teslae1/cobclean"
+  },
   "version": "0.0.6",
   "engines": {
     "vscode": "^1.125.0"
