@@ -7,6 +7,72 @@ suite('Format Procedure test suite', () => {
 
 	vscode.window.showInformationMessage('Start all tests.');
 
+  test('handles multiple move targets with single IN statement', async function () {
+		const initial = `
+       MYHEADER |SECTION.
+           MOVE A IN AGROUP
+             TO A IN BGROUP
+           MOVE AA  IN AGROUP TO BB BBB IN SOMEGROUP BBBB
+           .
+`;
+		const exp = `
+       MYHEADER SECTION.
+           MOVE A   IN AGROUP
+             TO A   IN BGROUP
+           MOVE AA  IN AGROUP
+             TO BB
+                BBB IN SOMEGROUP
+                BBBB
+           .
+`;
+
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
+  });
+
+  test('handles multiple move targets with in params', async function () {
+		const initial = `
+       MYHEADER |SECTION.
+           MOVE A IN AGROUP
+             TO A IN BGROUP
+           MOVE AA  IN AGROUP TO AA  IN BGROUP 
+  AAA IN BGROUP                         
+           .
+`;
+		const exp = `
+       MYHEADER SECTION.
+           MOVE A   IN AGROUP
+             TO A   IN BGROUP
+           MOVE AA  IN AGROUP
+             TO AA  IN BGROUP
+                AAA IN BGROUP
+           .
+`;
+
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
+  });
+
+  test('handles multiple move targets', async function () {
+		const initial = `
+       MYHEADER |SECTION.
+           MOVE A IN AGROUP
+             TO A IN BGROUP
+           MOVE AA  IN AGROUP TO BB BBB BBBB
+           .
+`;
+		const exp = `
+       MYHEADER SECTION.
+           MOVE A  IN AGROUP
+             TO A  IN BGROUP
+           MOVE AA IN AGROUP
+             TO BB
+                BBB
+                BBBB
+           .
+`;
+
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
+  });
+
   test('only formats selection if selection exists', async function () {
 		const initial = `
        MYHEADER SECTION.

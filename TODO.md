@@ -34,7 +34,6 @@ npm test
         - if so we want to break the line somewhere for all in that move group
   - [x] support same kind of formatting from video
 - [x] formatter able to align everything to do with paragraph 
-- [x] support multiple move targets in formatting
   - [x] remember to still preserve intertwined comments when also supporting multi move targets
   - [x] ensure it has proper stop for move groups
 - [x] remove dupliation from createGroupFormattedLines
@@ -45,11 +44,11 @@ npm test
   - [x] only run on selected lines ofc
   - [x] support selection cursor for test framework
   - [x] also support uncomment thing
-- [ ] do selection scoped formatting
+- [x] do selection scoped formatting
+- [x] support multiple move targets in formatting
+- [ ] consider supporting "OF" keyword which does the same as "IN"
 - [ ] consider supporting format selection where the header of a procedure is included?
 - [ ] document all commands in readme
-- [ ] do pretty readme and consider gif example
-  - [ ] move todo to seperate
 - [ ] do first actual version release
 - [ ] try and see if possible to override = thing
 - [ ] consider method extractor function
