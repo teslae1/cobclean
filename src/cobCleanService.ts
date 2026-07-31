@@ -137,17 +137,22 @@ function toUpperCaseExcludingStringLiterals(sourceLine: string): string {
     return uppercasedSourceLine;
 }
 
+function findFirstNonWhitespaceCharIndex(str: string): number{
+    for(let i = 0; i < str.length;i++){
+        if(str[i] !== " "){ 
+            return i;
+        }
+    }
+    return -1;
+}
+
 function indentProcedureSourceLine(sourceLine: string): string {
     if(isComment(sourceLine)){
         return indentComment(sourceLine);
     }
-    let firstNonWhitespaceCharIndex = -1;
-    for(let i = 0; i < sourceLine.length;i++){
-        if(sourceLine[i] !== " "){ 
-            firstNonWhitespaceCharIndex = i;
-            break;
-        }
-    }
+
+    const firstNonWhitespaceCharIndex = findFirstNonWhitespaceCharIndex(sourceLine);
+
     if(firstNonWhitespaceCharIndex === -1){
         return sourceLine;
     }
@@ -166,13 +171,7 @@ function indentHeader(sourceLine: string) : string{
 }
 
 function moveStartOfNonWhitespaceToIndex(sourceLine: string, index: number): string {
-    let firstIndexOfNonWhitespace = -1;
-    for(let i = 0; i < sourceLine.length;i++){
-        if(sourceLine[i] !== " "){
-            firstIndexOfNonWhitespace = i;
-            break;
-        }
-    }
+    let firstIndexOfNonWhitespace = findFirstNonWhitespaceCharIndex(sourceLine);
     if(firstIndexOfNonWhitespace === -1){
         return sourceLine;
     }
@@ -217,12 +216,24 @@ function doMoveIdent(formattedLines: string[]) : string[] {
             }
         }
 
-        const targetIndexOfIn = 16 + largestLenOfArg;
-        const groupFormattedLines = createGroupFormattedLines(group, targetIndexOfIn);
+        const moveGroupIndentSpaces = getMoveGroupIndentSpaces(group, offset, formattedLines);
+        const targetIndexOfIn = moveGroupIndentSpaces.length + 5 + largestLenOfArg;
+        const groupFormattedLines = createGroupFormattedLines(group, targetIndexOfIn, moveGroupIndentSpaces);
         offset = replaceFormattedLinesWithNewGroupFormattedLines(formattedLines, groupFormattedLines, offset, group, endOfGroupLineIndex);
     }
 
     return formattedLines;
+}
+
+function getMoveGroupIndentSpaces(group: MoveToStatement[], offset: number, formattedLines: string[]): string {
+    const firstLineOfMoveGroupIndex = group[0].moveArg.lineIndex + offset;
+    const firstLineOfMoveGroup = formattedLines[firstLineOfMoveGroupIndex];
+    const indexOfFirstCharInFirstLineMoveGroup = findFirstNonWhitespaceCharIndex(firstLineOfMoveGroup);
+    let moveGroupIndentSpaces = AMOUNT_SPACES_FOR_MARGIN_2;
+    while (moveGroupIndentSpaces.length < indexOfFirstCharInFirstLineMoveGroup) {
+        moveGroupIndentSpaces += " ";
+    }
+    return moveGroupIndentSpaces;
 }
 
 function doUppercasing(formattedLines: string[]): string[] {
@@ -404,10 +415,18 @@ function getSourceOfprocedureToFormat(sourceLines: string[],
     }
 }
 
-function createGroupFormattedLines(group: MoveToStatement[], targetIndexOfIn: number): string[] {
-    let groupFormattedLines = createGroupFormattedLinesWithIdentSettings(group, targetIndexOfIn, false);
+function createGroupFormattedLines(group: MoveToStatement[], 
+    targetIndexOfIn: number, 
+    moveGroupIndentSpaces: string): string[] {
+    let groupFormattedLines = createGroupFormattedLinesWithIdentSettings(group, 
+        targetIndexOfIn, 
+        false, 
+        moveGroupIndentSpaces);
     if (groupFormattedLines.some(l => l.length > MARGIN2_MAX_LINE_LEN)) {
-        groupFormattedLines = createGroupFormattedLinesWithIdentSettings(group, targetIndexOfIn, true);
+        groupFormattedLines = createGroupFormattedLinesWithIdentSettings(group, 
+            targetIndexOfIn, 
+            true, 
+            moveGroupIndentSpaces);
     }
     return groupFormattedLines;
 }
@@ -454,9 +473,10 @@ function createMoveLine(keyword: string,
     arg: string, 
     inArgs: LineItem[], 
     targetIndexOfIn: number,
-    doSeperateLineForIn: boolean): string {
+    doSeperateLineForIn: boolean,
+    moveGroupIndentSpaces: string): string {
     const keywordIncludingSpaces = keyword === MOVE_KEYWORD ? keyword : "  " + keyword;
-    let moveLine = AMOUNT_SPACES_FOR_MARGIN_2 + keywordIncludingSpaces + " " + arg;
+    let moveLine = moveGroupIndentSpaces + keywordIncludingSpaces + " " + arg;
     if (inArgs.length > 0 && !doSeperateLineForIn) {
         while (moveLine.length < targetIndexOfIn) {
             moveLine += " ";
@@ -474,7 +494,8 @@ function createMoveLine(keyword: string,
 
 function createGroupFormattedLinesWithIdentSettings(group: MoveToStatement[],
     targetIndexOfIn: number,
-    doSeperateLineForIn: boolean): string[] {
+    doSeperateLineForIn: boolean,
+    moveGroupIndentSpaces: string): string[] {
     const groupFormattedLines: string [] = [];
     for (let i = 0; i < group.length; i++) {
         const statement = group[i];
@@ -482,14 +503,16 @@ function createGroupFormattedLinesWithIdentSettings(group: MoveToStatement[],
             statement.moveArg.value, 
             statement.moveInArgs, 
             targetIndexOfIn, 
-            doSeperateLineForIn);
+            doSeperateLineForIn,
+            moveGroupIndentSpaces);
         groupFormattedLines.push(moveLine);
         if(statement.toTargets.length > 0){// This will not be present in cases where the statement parser stopped early because of comment
             const toLine = createMoveLine(TO_KEYWORD,
                 statement.toTargets[0].arg.value,
                 statement.toTargets[0].inArgs,
                 targetIndexOfIn,
-                doSeperateLineForIn);
+                doSeperateLineForIn,
+                moveGroupIndentSpaces);
             groupFormattedLines.push(toLine);
             //handle multiple to targets
             for(let j = 1; j < statement.toTargets.length;j++){
@@ -499,8 +522,8 @@ function createGroupFormattedLinesWithIdentSettings(group: MoveToStatement[],
                         oneOfMultipleToTargets.arg.value,
                         oneOfMultipleToTargets.inArgs,
                         targetIndexOfIn,
-                        doSeperateLineForIn
-                    ));
+                        doSeperateLineForIn,
+                        moveGroupIndentSpaces));
             }
         }
     }

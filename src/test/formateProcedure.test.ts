@@ -5,7 +5,34 @@ const commandName = 'cobclean.formatProcedure';
 
 suite('Format Procedure test suite', () => {
 
-	vscode.window.showInformationMessage('Start all tests.');
+  test('already indented content with existing ident stay indented also for move groups', async function () {
+
+		const initial = `
+       MYHEADER |SECTION.
+           IF CONDITION
+             MOVE A IN AGROUP
+               TO A IN BGROUP
+             MOVE AA  IN AGROUP TO BB BBB IN SOMEGROUP BBBB
+             COMPUTE A = B + C
+           END-IF
+           .
+`;
+		const exp = `
+       MYHEADER SECTION.
+           IF CONDITION
+             MOVE A   IN AGROUP
+               TO A   IN BGROUP
+             MOVE AA  IN AGROUP
+               TO BB
+                  BBB IN SOMEGROUP
+                  BBBB
+             COMPUTE A = B + C
+           END-IF
+           .
+`;
+
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
+  });
 
   test('handles inline multi target move with IN parms', async function () {
 
@@ -211,7 +238,7 @@ suite('Format Procedure test suite', () => {
 
 		const initial = `
        MYHEADER |SECTION.
-                move '123' to x in agroup 
+         move '123' to x in agroup 
            .
 `;
 		const exp = `

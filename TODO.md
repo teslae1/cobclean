@@ -47,29 +47,8 @@ npm test
 - [x] do selection scoped formatting
 - [x] support multiple move targets in formatting
 - [x] make sure test breaks - this is a problem where b and c dissapears
-- [ ] make sure already indented content within if etc stay indented also for move groups
-
-		const initial = `
-       MYHEADER |SECTION.
-           IF CONDITION
-             MOVE A IN AGROUP
-               TO A IN BGROUP
-             MOVE AA  IN AGROUP TO BB BBB IN SOMEGROUP BBBB
-           END-IF
-           .
-`;
-		const exp = `
-       MYHEADER SECTION.
-           IF CONDITION
-             MOVE A   IN AGROUP
-               TO A   IN BGROUP
-             MOVE AA  IN AGROUP
-               TO BB
-                  BBB IN SOMEGROUP
-                  BBBB
-           END-IF
-           .
-`;
+- [x] make sure already indented content within if etc stay indented also for move groups
+  - [x] make sure to centralize find first non whitespace
 
 - [ ] consider supporting "OF" keyword which does the same as "IN"
 - [ ] dont auto uppercase comments (and record for a new gif without this)
