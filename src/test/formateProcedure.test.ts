@@ -7,6 +7,44 @@ suite('Format Procedure test suite', () => {
 
 	vscode.window.showInformationMessage('Start all tests.');
 
+  test('handles inline multi target move with IN parms', async function () {
+
+		const initial = `
+       MYHEADER |SECTION.
+           move f to a in agroup b in bgroup c
+           .
+`;
+		const exp = `
+       MYHEADER SECTION.
+           MOVE F
+             TO A IN AGROUP
+                B IN BGROUP
+                C
+           .
+`;
+
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
+  });
+
+  test('handles inline multi target move', async function () {
+
+		const initial = `
+       MYHEADER |SECTION.
+           move f to a b c
+           .
+`;
+		const exp = `
+       MYHEADER SECTION.
+           MOVE F
+             TO A
+                B
+                C
+           .
+`;
+
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
+  });
+
   test('handles multiple move targets with single IN statement', async function () {
 		const initial = `
        MYHEADER |SECTION.

@@ -46,7 +46,35 @@ npm test
   - [x] also support uncomment thing
 - [x] do selection scoped formatting
 - [x] support multiple move targets in formatting
+- [x] make sure test breaks - this is a problem where b and c dissapears
+- [ ] make sure already indented content within if etc stay indented also for move groups
+
+		const initial = `
+       MYHEADER |SECTION.
+           IF CONDITION
+             MOVE A IN AGROUP
+               TO A IN BGROUP
+             MOVE AA  IN AGROUP TO BB BBB IN SOMEGROUP BBBB
+           END-IF
+           .
+`;
+		const exp = `
+       MYHEADER SECTION.
+           IF CONDITION
+             MOVE A   IN AGROUP
+               TO A   IN BGROUP
+             MOVE AA  IN AGROUP
+               TO BB
+                  BBB IN SOMEGROUP
+                  BBBB
+           END-IF
+           .
+`;
+
 - [ ] consider supporting "OF" keyword which does the same as "IN"
+- [ ] dont auto uppercase comments (and record for a new gif without this)
+  - [ ] record new thing for gif
+  - [ ] update documentation
 - [ ] consider supporting format selection where the header of a procedure is included?
 - [ ] document all commands in readme
 - [ ] do first actual version release
