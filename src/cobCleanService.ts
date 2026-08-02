@@ -238,6 +238,7 @@ function getMoveGroupIndentSpaces(group: MoveToStatement[], offset: number, form
 
 function doUppercasing(formattedLines: string[]): string[] {
     for(let i = 0; i < formattedLines.length;i++){
+        if (isComment(formattedLines[i])) { continue; }
         formattedLines[i] = toUpperCaseExcludingStringLiterals(formattedLines[i]);
     }
     return formattedLines;

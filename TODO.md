@@ -1,4 +1,17 @@
 
+- [ ] consider supporting "OF" keyword which does the same as "IN"
+- [ ] consider supporting format selection where the header of a procedure is included?
+- [ ] document all commands in readme
+- [ ] consider method extractor function
+- [ ] consider better implementation of log error
+- [ ] support a good way of detecting end when not another procedure like a copybook
+- [ ] consider format all procedures
+- [ ] once adding more features consider renaming test suite to be only procedure scoped
+
+- [x] dont auto uppercase comments (and record for a new gif without this)
+  - [x] record new thing for gif
+  - [x] update documentation
+
 - [x] get basic running
 - [x] get test suite running
 npm test
@@ -49,25 +62,3 @@ npm test
 - [x] make sure test breaks - this is a problem where b and c dissapears
 - [x] make sure already indented content within if etc stay indented also for move groups
   - [x] make sure to centralize find first non whitespace
-
-- [ ] consider supporting "OF" keyword which does the same as "IN"
-- [ ] dont auto uppercase comments (and record for a new gif without this)
-  - [ ] record new thing for gif
-  - [ ] update documentation
-- [ ] consider supporting format selection where the header of a procedure is included?
-- [ ] document all commands in readme
-- [ ] do first actual version release
-- [ ] try and see if possible to override = thing
-- [ ] consider method extractor function
-- [ ] consider better implementation of log error
-- [ ] support cobol-check source formatter
-  - [ ] auto uppercase
-  - [ ] auto align comment
-  - [ ] auto align anything to the left of the thing
-  - [ ] consider support group indent
-- [X] keep mouse at expected line
-- [ ] support a good way of detecting end when not another procedure like a copybook
-- [ ] consider format all procedures
-- [ ] once adding more features consider renaming test suite to be only procedure scoped
-- [ ] do better error msg
-- [ ] reach first draft publish

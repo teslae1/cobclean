@@ -1,9 +1,30 @@
-import * as vscode from 'vscode';
 import { assertFormatProcedureChangesContentAsync } from './testHelpers'
 
 const commandName = 'cobclean.formatProcedure';
 
 suite('Format Procedure test suite', () => {
+
+	test('no auto-uppercasing for comments', async function () {
+		const initial = `
+      *********************
+       first section.
+      *********************
+      *     my lowercase comment
+           DISPLAy |'SOMETHING THAT HAS lowercase'
+           .
+`;
+		const exp = `
+      *********************
+       FIRST SECTION.
+      *********************
+      *     my lowercase comment
+           DISPLAY 'SOMETHING THAT HAS lowercase'
+           .
+`;
+
+		this.timeout(10000);
+		await assertFormatProcedureChangesContentAsync(initial, exp, commandName);
+	});
 
   test('already indented content with existing ident stay indented also for move groups', async function () {
 
